@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Order Costing - UMKM Pengrajin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS SDK via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header>
+        <h1>Sistem Akuntansi Job Order Costing</h1>
+        <p>Pencatatan Biaya Pesanan UMKM Pengrajin</p>
+    </header>
+
+    <main class="container">
+        <!-- Form Buat Pesanan Baru -->
+        <section class="card">
+            <h2>1. Tambah Pesanan Baru (Job Order)</h2>
+            <form id="job-form">
+                <div class="form-group">
+                    <label for="job-number">Nomor Pesanan (Job #)</label>
+                    <input type="text" id="job-number" placeholder="Contoh: JOB-001" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-name">Nama Pelanggan</label>
+                    <input type="text" id="customer-name" placeholder="Nama Pemesan" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-name">Nama Produk Kerajinan</label>
+                    <input type="text" id="product-name" placeholder="Contoh: Meja Ukir Kayu" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Jumlah (Qty)</label>
+                    <input type="number" id="quantity" min="1" value="1" required>
+                </div>
+                <button type="submit" class="btn-primary">Buat Pesanan</button>
+            </form>
+        </section>
+
+        <!-- Form Input Biaya Pesanan -->
+        <section class="card">
+            <h2>2. Catat Biaya Produksi</h2>
+            <form id="cost-form">
+                <div class="form-group">
+                    <label for="select-job">Pilih Pesanan</label>
+                    <select id="select-job" required>
+                        <option value="">-- Pilih Pesanan --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cost-category">Kategori Biaya</label>
+                    <select id="cost-category" required>
+                        <option value="RAW_MATERIAL">Bahan Baku Langsung</option>
+                        <option value="DIRECT_LABOR">Tenaga Kerja Langsung</option>
+                        <option value="OVERHEAD">Overhead Pabrik (BOP)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cost-desc">Keterangan Biaya</label>
+                    <input type="text" id="cost-desc" placeholder="Contoh: Kayu Jati / Upah Amplas" required>
+                </div>
+                <div class="form-group">
+                    <label for="cost-amount">Jumlah Biaya (Rp)</label>
+                    <input type="number" id="cost-amount" min="0" placeholder="0" required>
+                </div>
+                <button type="submit" class="btn-secondary">Tambah Biaya</button>
+            </form>
+        </section>
+
+        <!-- Ringkasan Kartu Biaya Pesanan -->
+        <section class="card full-width">
+            <h2>3. Ringkasan Kartu Biaya Pesanan (Job Cost Sheet)</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No. Job</th>
+                            <th>Pemesan</th>
+                            <th>Produk</th>
+                            <th>Qty</th>
+                            <th>Bahan Baku</th>
+                            <th>TK Langsung</th>
+                            <th>Overhead</th>
+                            <th>Total Biaya</th>
+                            <th>HPP / Unit</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="job-summary-table">
+                        <!-- Data diisi secara dinamis oleh JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Memanggil Script Backend Client & Script Utama Frontend -->
+    <script src="../backend/supabaseClient.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

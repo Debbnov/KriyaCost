@@ -1,98 +1,176 @@
-:root {
-    --primary-color: #2c3e50;
-    --secondary-color: #27ae60;
-    --bg-color: #f8f9fa;
-    --card-bg: #ffffff;
-    --text-color: #333333;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    margin: 0;
-    padding: 0;
+    display: flex;
+    background-color: #f4f6f9;
+    color: #333;
+    min-height: 100vh;
 }
 
-header {
-    background-color: var(--primary-color);
-    color: white;
+/* SIDEBAR NAVIGATION */
+.sidebar {
+    width: 250px;
+    background-color: #1e293b;
+    color: #fff;
+    padding: 20px 0;
+    flex-shrink: 0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar h2 {
     text-align: center;
-    padding: 1.5rem;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #334155;
+    font-size: 1.2rem;
+    color: #38bdf8;
 }
 
-.container {
+.sidebar ul {
+    list-style: none;
+    margin-top: 20px;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 12px 25px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #334155;
+    color: #ffffff;
+    padding-left: 30px;
+}
+
+/* MAIN CONTENT AREA */
+.content {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+h1 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #0f172a;
+}
+
+/* DASHBOARD CARDS */
+.cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+    margin-bottom: 30px;
 }
 
 .card {
-    background: var(--card-bg);
+    background-color: #ffffff;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #0284c7;
 }
 
-.full-width {
-    grid-column: 1 / -1;
+.card h3 {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 10px;
 }
 
-.form-group {
+.card p {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #0f172a;
+}
+
+/* FORM STYLING */
+.form-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+
+.form-container h3 {
     margin-bottom: 15px;
+    color: #334155;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.form-group input, 
-.form-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+input, select, textarea {
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #0284c7;
 }
 
 button {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
+    background-color: #0284c7;
     color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
+    transition: background 0.2s;
 }
 
-.btn-primary { background-color: #2980b9; }
-.btn-secondary { background-color: var(--secondary-color); }
-
-.table-responsive {
-    overflow-x: auto;
+button:hover {
+    background-color: #0369a1;
 }
 
+/* TABLE STYLING */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
-}
-
-table, th, td {
-    border: 1px solid #dddddd;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 th, td {
-    padding: 12px;
+    padding: 12px 15px;
     text-align: left;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 th {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+tr:hover {
+    background-color: #f1f5f9;
+}
 }

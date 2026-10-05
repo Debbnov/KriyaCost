@@ -1,6 +1,7 @@
 // =============================================================
 // KONFIGURASI SUPABASE
 // =============================================================
+// Pastikan URL & ANON KEY ini sudah diisi dengan benar
 const SUPABASE_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_nuwL8Lj0kPSA80nEJGiQ5A_q8o62w5d';
 
@@ -64,9 +65,92 @@ function updateCustomerDropdowns(customers) {
     selectOrder.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
     customers.forEach(cust => {
         const opt = document.createElement('option');
+        // Menggunakan customer_code untuk value dropdown pesanan
         opt.value = cust.customer_code || cust.id;
         opt.textContent = `${cust.customer_code || ''} - ${cust.name}`;
         selectOrder.appendChild(opt);
+    });
+}
+
+function setupCustomerForm() {
+    const formCustomer = document.getElementById('form-customer');
+    if (!formCustomer) return;
+
+    formCustomer.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const code = document.getElementById('cust-code').value;
+        const name = document.getElementById('cust-name').value;
+        const phone = document.getElementById('cust-phone').value;
+        const address = document.getElementById('cust-address').value;
+
+        if (!supabaseClient) {
+            alert('Supabase belum terkonfigurasi dengan benar.');
+            return;
+        }
+
+        // Sesuai tabel customers: customer_code, name, phone, address
+        const { error } = await supabaseClient
+            .from('customers')
+            .insert([{
+                customer_code: code,
+                name: name,
+                phone: phone,
+                address: address
+            }]);
+
+        if (error) {
+            alert('Gagal simpan pelanggan ke Supabase:\n' + error.message);
+            console.error('Detail Error:', error);
+            return;
+        }
+
+        alert('Data pelanggan berhasil disimpan permanen ke Supabase!');
+        formCustomer.reset();
+        loadCustomers();
+    });
+}
+
+// =============================================================
+// DATA PESANAN (JOB ORDERS)
+// =============================================================
+async function loadOrders() {
+    if (!supabaseClient) return;
+
+    const { data, error } = await supabaseClient
+        .from('orders')
+        .select('*');
+
+    if (error) {
+        console.error('Gagal mengambil data pesanan:', error);
+        return;
+    }
+
+    renderOrders(data || []);
+    updateDashboard(data || []);
+}
+
+function renderOrders(orders) {
+    const tbody = document.getElementById('table-orders');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    orders.forEach(ord => {
+        const tr = document.createElement('tr');
+        const createdDate = ord.created_at ? new Date(ord.created_at).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID');
+        
+        tr.innerHTML = `
+            <td>${createdDate}</td>
+            <td>${ord.order_number || '-'}</td>
+            <td>${ord.customer_id || '-'}</td>
+            <td>${ord.product_name || '-'}</td>
+            <td>${ord.quantity || 0}</td>
+            <td>Rp ${Number(ord.selling_price || 0).toLocaleString('id-ID')}</td>
+            <td>Rp ${Number(ord.total_cost || 0).toLocaleString('id-ID')}</td>
+            <td><span class="badge">${ord.status || 'Dalam Proses'}</span></td>
+            <td>-</td>
+        `;
+        tbody.appendChild(tr);
     });
 }
 
@@ -88,35 +172,50 @@ function setupOrderForm() {
             return;
         }
 
-        // Kita coba kirim dengan nama kolom 'customer_id' dulu
-        let payload = {
-            customer_id: customerCode,
-            order_number: orderNumber,
-            product: product,
-            qty: qty,
-            price: price,
-            status: 'Dalam Proses',
-            total_cost: 0
-        };
-
-        let { error } = await supabaseClient.from('orders').insert([payload]);
-
-        // Kalau ternyata nama kolomnya 'customer_code' atau 'cust_code', ini fallback-nya
-        if (error && error.message.includes('customer_id')) {
-            payload.cust_code = customerCode;
-            delete payload.customer_id;
-            const res = await supabaseClient.from('orders').insert([payload]);
-            error = res.error;
-        }
+        // Sesuai tabel orders: customer_id, order_number, product_name, quantity, selling_price, total_cost, status
+        const { error } = await supabaseClient
+            .from('orders')
+            .insert([{
+                customer_id: customerCode,
+                order_number: orderNumber,
+                product_name: product,
+                quantity: qty,
+                selling_price: price,
+                total_cost: 0,
+                status: 'Dalam Proses'
+            }]);
 
         if (error) {
-            alert('Gagal membuat pesanan: ' + error.message);
-            console.error(error);
+            alert('Gagal membuat pesanan:\n' + error.message);
+            console.error('Detail Error:', error);
             return;
         }
 
-        alert('Pesanan baru berhasil disimpan!');
+        alert('Pesanan baru berhasil disimpan permanen ke Supabase!');
         formOrder.reset();
         loadOrders();
     });
 }
+
+function updateDashboard(orders) {
+    const totalOrders = document.getElementById('dash-total-orders');
+    const inProgress = document.getElementById('dash-in-progress');
+    const finished = document.getElementById('dash-finished');
+    const completed = document.getElementById('dash-completed');
+
+    if (totalOrders) totalOrders.textContent = orders.length;
+    if (inProgress) inProgress.textContent = orders.filter(o => o.status === 'Dalam Proses').length;
+    if (finished) finished.textContent = orders.filter(o => o.status === 'Selesai').length;
+    if (completed) completed.textContent = orders.filter(o => o.status === 'Lunas').length;
+}
+
+// =============================================================
+// INISIALISASI
+// =============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    showTab('dashboard');
+    setupCustomerForm();
+    setupOrderForm();
+    loadCustomers();
+    loadOrders();
+});

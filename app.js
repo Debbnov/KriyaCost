@@ -205,6 +205,90 @@ function setupOrderForm() {
     });
 }
 
+// =============================================================
+// PENCATATAN BIAYA (COSTS)
+// =============================================================
+function setupCostForm() {
+    const formCost = document.getElementById('form-cost');
+    if (!formCost) return;
+
+    formCost.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const orderNumber = document.getElementById('cost-order-id').value;
+        const category = document.getElementById('cost-category').value;
+        const description = document.getElementById('cost-desc').value;
+        const amount = parseFloat(document.getElementById('cost-amount').value);
+
+        if (!supabaseClient) {
+            alert('Supabase belum terkonfigurasi dengan benar.');
+            return;
+        }
+
+        // Update akumulasi total_cost di tabel orders
+        const { data: currentOrder } = await supabaseClient
+            .from('orders')
+            .select('total_cost')
+            .eq('order_number', orderNumber)
+            .single();
+
+        const newTotalCost = ((currentOrder ? currentOrder.total_cost : 0) || 0) + amount;
+
+        const { error } = await supabaseClient
+            .from('orders')
+            .update({ total_cost: newTotalCost })
+            .eq('order_number', orderNumber);
+
+        if (error) {
+            alert('Gagal mencatat biaya: ' + error.message);
+            return;
+        }
+
+        alert('Biaya berhasil dicatat!');
+        formCost.reset();
+        loadOrders();
+    });
+}
+
+// =============================================================
+// PENCATATAN PEMBAYARAN (PAYMENTS)
+// =============================================================
+function setupPaymentForm() {
+    const formPayment = document.getElementById('form-payment');
+    if (!formPayment) return;
+
+    formPayment.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const orderNumber = document.getElementById('payment-order-id').value;
+        const amount = parseFloat(document.getElementById('payment-amount').value);
+        const method = document.getElementById('payment-method').value;
+
+        if (!supabaseClient) {
+            alert('Supabase belum terkonfigurasi dengan benar.');
+            return;
+        }
+
+        // Ubah status pesanan menjadi 'Lunas'
+        const { error } = await supabaseClient
+            .from('orders')
+            .update({ status: 'Lunas' })
+            .eq('order_number', orderNumber);
+
+        if (error) {
+            alert('Gagal menyimpan pembayaran: ' + error.message);
+            return;
+        }
+
+        alert(`Pembayaran sebesar Rp ${amount.toLocaleString('id-ID')} via ${method} berhasil disimpan! Status pesanan otomatis menjadi Lunas.`);
+        formPayment.reset();
+        loadOrders();
+    });
+}
+
+// =============================================================
+// DASHBOARD & INISIALISASI
+// =============================================================
 function updateDashboard(orders) {
     const totalOrders = document.getElementById('dash-total-orders');
     const inProgress = document.getElementById('dash-in-progress');
@@ -217,13 +301,12 @@ function updateDashboard(orders) {
     if (completed) completed.textContent = orders.filter(o => o.status === 'Lunas').length;
 }
 
-// =============================================================
-// INISIALISASI
-// =============================================================
 document.addEventListener('DOMContentLoaded', () => {
     showTab('dashboard');
     setupCustomerForm();
     setupOrderForm();
+    setupCostForm();
+    setupPaymentForm();
     loadCustomers();
     loadOrders();
 });

@@ -109,7 +109,7 @@ function setupCustomerForm() {
 }
 
 // =============================================================
-// DATA PESANAN (JOB ORDERS)
+// DATA PESANAN (JOB ORDERS) & FUNGSI AKSI STATUS
 // =============================================================
 async function loadOrders() {
     if (!supabaseClient) return;
@@ -146,10 +146,35 @@ function renderOrders(orders) {
             <td>Rp ${Number(ord.selling_price || 0).toLocaleString('id-ID')}</td>
             <td>Rp ${Number(ord.total_cost || 0).toLocaleString('id-ID')}</td>
             <td><span class="badge">${ord.status || 'Dalam Proses'}</span></td>
-            <td>-</td>
+            <td>
+                <select onchange="updateOrderStatus('${ord.order_number}', this.value)" style="padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-size: 12px; cursor: pointer;">
+                    <option value="" disabled selected>Ubah Status...</option>
+                    <option value="Dalam Antrian">Dalam Antrian</option>
+                    <option value="Dalam Proses">Dalam Proses</option>
+                    <option value="Selesai">Selesai Produksi</option>
+                    <option value="Lunas">Lunas</option>
+                </select>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+async function updateOrderStatus(orderNumber, newStatus) {
+    if (!supabaseClient) return;
+
+    const { error } = await supabaseClient
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('order_number', orderNumber);
+
+    if (error) {
+        alert('Gagal memperbarui status: ' + error.message);
+        return;
+    }
+
+    alert(`Status pesanan ${orderNumber} berhasil diubah menjadi "${newStatus}"!`);
+    loadOrders();
 }
 
 function updateOrderDropdowns(orders) {
@@ -191,7 +216,7 @@ function setupOrderForm() {
                 selling_price: price,
                 total_cost: 0,
                 total_paid: 0,
-                status: 'Dalam Proses'
+                status: 'Dalam Antrian'
             }]);
 
         if (error) {
@@ -269,7 +294,6 @@ function setupPaymentForm() {
             return;
         }
 
-        // 1. Ambil harga jual dan total pembayaran sebelumnya
         const { data: order, error: fetchError } = await supabaseClient
             .from('orders')
             .select('selling_price, status, total_paid')
@@ -285,13 +309,11 @@ function setupPaymentForm() {
         const currentPaid = parseFloat(order.total_paid || 0);
         const newTotalPaid = currentPaid + amount;
 
-        // 2. Tentukan status berdasarkan total akumulasi pembayaran
-        let newStatus = 'Dalam Proses';
+        let newStatus = order.status;
         if (newTotalPaid >= sellingPrice) {
             newStatus = 'Lunas';
         }
 
-        // 3. Simpan perubahan ke Supabase
         const { error: updateError } = await supabaseClient
             .from('orders')
             .update({ 
@@ -309,7 +331,7 @@ function setupPaymentForm() {
         if (newStatus === 'Lunas') {
             alert(`Pembayaran Rp ${amount.toLocaleString('id-ID')} via ${method} berhasil!\nStatus: LUNAS 🎉`);
         } else {
-            alert(`Pembayaran Rp ${amount.toLocaleString('id-ID')} via ${method} berhasil!\nTerbayar: Rp ${newTotalPaid.toLocaleString('id-ID')}\nSisa Tagihan: Rp ${sisaTagihan.toLocaleString('id-ID')}\nStatus: Dalam Proses (Belum Lunas)`);
+            alert(`Pembayaran Rp ${amount.toLocaleString('id-ID')} via ${method} berhasil!\nTerbayar: Rp ${newTotalPaid.toLocaleString('id-ID')}\nSisa Tagihan: Rp ${sisaTagihan.toLocaleString('id-ID')}\nStatus: Belum Lunas`);
         }
 
         formPayment.reset();
@@ -327,7 +349,7 @@ function updateDashboard(orders) {
     const completed = document.getElementById('dash-completed');
 
     if (totalOrders) totalOrders.textContent = orders.length;
-    if (inProgress) inProgress.textContent = orders.filter(o => o.status === 'Dalam Proses').length;
+    if (inProgress) inProgress.textContent = orders.filter(o => o.status === 'Dalam Proses' || o.status === 'Dalam Antrian').length;
     if (finished) finished.textContent = orders.filter(o => o.status === 'Selesai').length;
     if (completed) completed.textContent = orders.filter(o => o.status === 'Lunas').length;
 }

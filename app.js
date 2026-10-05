@@ -152,67 +152,41 @@ function renderOrders(orders) {
     });
 }
 
-function setupOrderForm() {
-    const formOrder = document.getElementById('form-order');
-    if (!formOrder) return;
+function setupCustomerForm() {
+    const formCustomer = document.getElementById('form-customer');
+    if (!formCustomer) return;
 
-    formOrder.addEventListener('submit', async function(e) {
+    formCustomer.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const customerCode = document.getElementById('order-customer').value;
-        const orderNumber = document.getElementById('order-number').value;
-        const product = document.getElementById('order-product').value;
-        const qty = parseInt(document.getElementById('order-qty').value, 10);
-        const price = parseFloat(document.getElementById('order-price').value);
+        const code = document.getElementById('cust-code').value;
+        const name = document.getElementById('cust-name').value;
+        const phone = document.getElementById('cust-phone').value;
+        const address = document.getElementById('cust-address').value;
 
         if (!supabaseClient) {
             alert('Supabase belum terkonfigurasi dengan benar.');
             return;
         }
 
+        // Kirim menggunakan nama kolom 'customer_code'
         const { error } = await supabaseClient
-            .from('orders')
+            .from('customers')
             .insert([{
-                customer_code: customerCode,
-                order_number: orderNumber,
-                product: product,
-                qty: qty,
-                price: price,
-                status: 'Dalam Proses',
-                total_cost: 0
+                customer_code: code,
+                name: name,
+                phone: phone,
+                address: address
             }]);
 
         if (error) {
-            alert('Gagal membuat pesanan: ' + error.message);
+            alert('Gagal simpan ke Supabase:\n' + error.message);
             console.error(error);
             return;
         }
 
-        alert('Pesanan baru berhasil disimpan!');
-        formOrder.reset();
-        loadOrders();
+        alert('Data pelanggan berhasil disimpan permanen!');
+        formCustomer.reset();
+        loadCustomers();
     });
 }
-
-function updateDashboard(orders) {
-    const totalOrders = document.getElementById('dash-total-orders');
-    const inProgress = document.getElementById('dash-in-progress');
-    const finished = document.getElementById('dash-finished');
-    const completed = document.getElementById('dash-completed');
-
-    if (totalOrders) totalOrders.textContent = orders.length;
-    if (inProgress) inProgress.textContent = orders.filter(o => o.status === 'Dalam Proses').length;
-    if (finished) finished.textContent = orders.filter(o => o.status === 'Selesai').length;
-    if (completed) completed.textContent = orders.filter(o => o.status === 'Lunas').length;
-}
-
-// =============================================================
-// INISIALISASI
-// =============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    showTab('dashboard');
-    setupCustomerForm();
-    setupOrderForm();
-    loadCustomers();
-    loadOrders();
-});

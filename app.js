@@ -1,7 +1,6 @@
 // =============================================================
 // KONFIGURASI SUPABASE
 // =============================================================
-// Pastikan URL & ANON KEY ini sudah diisi dengan benar
 const SUPABASE_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_nuwL8Lj0kPSA80nEJGiQ5A_q8o62w5d';
 
@@ -65,7 +64,6 @@ function updateCustomerDropdowns(customers) {
     selectOrder.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
     customers.forEach(cust => {
         const opt = document.createElement('option');
-        // Menggunakan customer_code untuk value dropdown pesanan
         opt.value = cust.customer_code || cust.id;
         opt.textContent = `${cust.customer_code || ''} - ${cust.name}`;
         selectOrder.appendChild(opt);
@@ -89,7 +87,6 @@ function setupCustomerForm() {
             return;
         }
 
-        // Sesuai tabel customers: customer_code, name, phone, address
         const { error } = await supabaseClient
             .from('customers')
             .insert([{
@@ -105,7 +102,7 @@ function setupCustomerForm() {
             return;
         }
 
-        alert('Data pelanggan berhasil disimpan permanen ke Supabase!');
+        alert('Data pelanggan berhasil disimpan!');
         formCustomer.reset();
         loadCustomers();
     });
@@ -127,6 +124,7 @@ async function loadOrders() {
     }
 
     renderOrders(data || []);
+    updateOrderDropdowns(data || []);
     updateDashboard(data || []);
 }
 
@@ -154,6 +152,17 @@ function renderOrders(orders) {
     });
 }
 
+function updateOrderDropdowns(orders) {
+    const costSelect = document.getElementById('cost-order-id');
+    const paymentSelect = document.getElementById('payment-order-id');
+
+    const optionsHtml = '<option value="">-- Pilih Pesanan --</option>' +
+        orders.map(o => `<option value="${o.order_number}">${o.order_number} - ${o.product_name}</option>`).join('');
+
+    if (costSelect) costSelect.innerHTML = optionsHtml;
+    if (paymentSelect) paymentSelect.innerHTML = optionsHtml;
+}
+
 function setupOrderForm() {
     const formOrder = document.getElementById('form-order');
     if (!formOrder) return;
@@ -172,7 +181,6 @@ function setupOrderForm() {
             return;
         }
 
-        // Sesuai tabel orders: customer_id, order_number, product_name, quantity, selling_price, total_cost, status
         const { error } = await supabaseClient
             .from('orders')
             .insert([{
@@ -191,7 +199,7 @@ function setupOrderForm() {
             return;
         }
 
-        alert('Pesanan baru berhasil disimpan permanen ke Supabase!');
+        alert('Pesanan baru berhasil disimpan!');
         formOrder.reset();
         loadOrders();
     });

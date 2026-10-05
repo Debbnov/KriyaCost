@@ -1,12 +1,9 @@
-// Configuration & State
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Akan dihubungkan ke Supabase
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// CONFIGURATION SUPABASE
+const SUPABASE_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_nuwL8Lj0kPSA80nEJGiQ5A_q8o62w5d';
 
-// Array lokal untuk menyimpan data sementara jika belum tersambung ke Supabase
-let customersData = [];
-let ordersData = [];
-let costsData = [];
-let paymentsData = [];
+// Inisialisasi Client Supabase
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // FUNGSI NAVIGASI TAB
 function showTab(tabId) {
@@ -21,42 +18,36 @@ function showTab(tabId) {
     }
 }
 
-// HANDLER FORM PELANGGAN
-function setupCustomerForm() {
-    const formCustomer = document.getElementById('form-customer');
-    if (!formCustomer) return;
+// -------------------------------------------------------------
+// PELANGGAN (CUSTOMERS)
+// -------------------------------------------------------------
 
-    formCustomer.addEventListener('submit', function(e) {
-        e.preventDefault();
+// Load Data Pelanggan dari Supabase
+async function loadCustomers() {
+    if (!supabase) return;
 
-        const code = document.getElementById('cust-code').value;
-        const name = document.getElementById('cust-name').value;
-        const phone = document.getElementById('cust-phone').value;
-        const address = document.getElementById('cust-address').value;
+    const { data, error } = await supabase
+        .from('customers')
+        .select('*');
 
-        // Tambahkan ke array pelanggan
-        const newCustomer = { code, name, phone, address };
-        customersData.push(newCustomer);
+    if (error) {
+        console.error('Gagal mengambil data pelanggan:', error);
+        return;
+    }
 
-        // Render ulang tabel & dropdown
-        renderCustomers();
-        updateCustomerDropdowns();
-
-        // Reset form
-        formCustomer.reset();
-        alert('Data pelanggan berhasil disimpan!');
-    });
+    renderCustomers(data || []);
+    updateCustomerDropdowns(data || []);
 }
 
-function renderCustomers() {
+function renderCustomers(customers) {
     const tbody = document.getElementById('table-customers');
     if (!tbody) return;
 
     tbody.innerHTML = '';
-    customersData.forEach(cust => {
+    customers.forEach(cust => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${cust.code}</td>
+            <td>${cust.code || cust.customer_code}</td>
             <td>${cust.name}</td>
             <td>${cust.phone || '-'}</td>
             <td>${cust.address || '-'}</td>
@@ -65,97 +56,58 @@ function renderCustomers() {
     });
 }
 
-function updateCustomerDropdowns() {
+function updateCustomerDropdowns(customers) {
     const selectOrder = document.getElementById('order-customer');
     if (!selectOrder) return;
 
     selectOrder.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
-    customersData.forEach(cust => {
+    customers.forEach(cust => {
         const opt = document.createElement('option');
-        opt.value = cust.code;
-        opt.textContent = `${cust.code} - ${cust.name}`;
+        opt.value = cust.id || cust.code;
+        opt.textContent = `${cust.code || cust.customer_code} - ${cust.name}`;
         selectOrder.appendChild(opt);
     });
 }
 
-// HANDLER FORM PESANAN (JOB ORDERS)
-function setupOrderForm() {
-    const formOrder = document.getElementById('form-order');
-    if (!formOrder) return;
+function setupCustomerForm() {
+    const formCustomer = document.getElementById('form-customer');
+    if (!formCustomer) return;
 
-    formOrder.addEventListener('submit', function(e) {
+    formCustomer.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const customerCode = document.getElementById('order-customer').value;
-        const orderNumber = document.getElementById('order-number').value;
-        const product = document.getElementById('order-product').value;
-        const qty = document.getElementById('order-qty').value;
-        const price = document.getElementById('order-price').value;
+        const code = document.getElementById('cust-code').value;
+        const name = document.getElementById('cust-name').value;
+        const phone = document.getElementById('cust-phone').value;
+        const address = document.getElementById('cust-address').value;
 
-        const newOrder = {
-            date: new Date().toLocaleDateString('id-ID'),
-            orderNumber,
-            customerCode,
-            product,
-            qty,
-            price,
-            totalCost: 0,
-            status: 'Dalam Proses'
-        };
+        // Simpan langsung ke database Supabase
+        if (supabase) {
+            const { data, error } = await supabase
+                .from('customers')
+                .insert([
+                    { code: code, name: name, phone: phone, address: address }
+                ]);
 
-        ordersData.push(newOrder);
-        renderOrders();
-        updateOrderDropdowns();
-        updateDashboard();
+            if (error) {
+                alert('Gagal menyimpan ke Supabase: ' + error.message);
+                console.error(error);
+                return;
+            }
 
-        formOrder.reset();
-        alert('Pesanan baru berhasil dibuat!');
+            alert('Data pelanggan berhasil disimpan permanen ke Supabase!');
+            loadCustomers(); // Load ulang data terbaru
+        } else {
+            alert('Supabase belum terkoneksi. Periksa URL dan API Key.');
+        }
+
+        formCustomer.reset();
     });
 }
 
-function renderOrders() {
-    const tbody = document.getElementById('table-orders');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-    ordersData.forEach(ord => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${ord.date}</td>
-            <td>${ord.orderNumber}</td>
-            <td>${ord.customerCode}</td>
-            <td>${ord.product}</td>
-            <td>${ord.qty}</td>
-            <td>Rp ${Number(ord.price).toLocaleString('id-ID')}</td>
-            <td>Rp ${Number(ord.totalCost).toLocaleString('id-ID')}</td>
-            <td><span class="badge">${ord.status}</span></td>
-            <td>-</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function updateOrderDropdowns() {
-    const costSelect = document.getElementById('cost-order-id');
-    const paymentSelect = document.getElementById('payment-order-id');
-
-    const optionsHtml = '<option value="">-- Pilih Pesanan --</option>' +
-        ordersData.map(o => `<option value="${o.orderNumber}">${o.orderNumber} - ${o.product}</option>`).join('');
-
-    if (costSelect) costSelect.innerHTML = optionsHtml;
-    if (paymentSelect) paymentSelect.innerHTML = optionsHtml;
-}
-
-function updateDashboard() {
-    document.getElementById('dash-total-orders').textContent = ordersData.length;
-    document.getElementById('dash-in-progress').textContent = ordersData.filter(o => o.status === 'Dalam Proses').length;
-    document.getElementById('dash-finished').textContent = ordersData.filter(o => o.status === 'Selesai').length;
-    document.getElementById('dash-completed').textContent = ordersData.filter(o => o.status === 'Lunas').length;
-}
-
-// INITIALIZATION
+// INITIALIZATION Saat Halaman Dimuat
 document.addEventListener('DOMContentLoaded', () => {
     showTab('dashboard');
     setupCustomerForm();
-    setupOrderForm();
+    loadCustomers(); // Ambil data awal dari Supabase
 });

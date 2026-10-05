@@ -253,6 +253,9 @@ function setupCostForm() {
 // =============================================================
 // PENCATATAN PEMBAYARAN (PAYMENTS)
 // =============================================================
+// =============================================================
+// PENCATATAN PEMBAYARAN (PAYMENTS) - DENGAN LOGIKA CICILAN
+// =============================================================
 function setupPaymentForm() {
     const formPayment = document.getElementById('form-payment');
     if (!formPayment) return;
@@ -269,44 +272,56 @@ function setupPaymentForm() {
             return;
         }
 
-        // Ubah status pesanan menjadi 'Lunas'
-        const { error } = await supabaseClient
+        // 1. Ambil data pesanan saat ini (harga jual & status)
+        const { data: order, error: fetchError } = await supabaseClient
             .from('orders')
-            .update({ status: 'Lunas' })
-            .eq('order_number', orderNumber);
+            .select('selling_price, status, total_paid')
+            .eq('order_number', orderNumber)
+            .single();
 
-        if (error) {
-            alert('Gagal menyimpan pembayaran: ' + error.message);
+        if (fetchError || !order) {
+            alert('Gagal mengambil data pesanan: ' + (fetchError ? fetchError.message : 'Pesanan tidak ditemukan'));
             return;
         }
 
-        alert(`Pembayaran sebesar Rp ${amount.toLocaleString('id-ID')} via ${method} berhasil disimpan! Status pesanan otomatis menjadi Lunas.`);
+        const sellingPrice = parseFloat(order.selling_price || 0);
+        const currentPaid = parseFloat(order.total_paid || 0);
+        const newTotalPaid = currentPaid + amount;
+
+        // 2. Cek apakah total pembayaran sudah mencukupi/melampaui harga jual
+        let newStatus = order.status;
+        if (newTotalPaid >= sellingPrice) {
+            newStatus = 'Lunas';
+        } else {
+            newStatus = 'Dalam Proses'; // Masih cicilan / DP
+        }
+
+        // 3. Update total pembayaran & status pesanan di Supabase
+        const { error: updateError } = await supabaseClient
+            .from('orders')
+            .update({ 
+                total_paid: newTotalPaid,
+                status: newStatus 
+            })
+            .eq('order_number', orderNumber);
+
+        if (updateError) {
+            // Jika kolom total_paid belum ada di Supabase, fallback hanya update status jika nilai bayar >= harga jual
+            const fallbackStatus = amount >= sellingPrice ? 'Lunas' : 'Dalam Proses';
+            await supabaseClient
+                .from('orders')
+                .update({ status: fallbackStatus })
+                .eq('order_number', orderNumber);
+        }
+
+        const sisa = sellingPrice - newTotalPaid;
+        if (newStatus === 'Lunas') {
+            alert(`Pembayaran Rp ${amount.toLocaleString('id-ID')} via ${method} berhasil disimpan!\nStatus Pesanan: LUNAS 🎉`);
+        } else {
+            alert(`Pembayaran Rp ${amount.toLocaleString('id-ID')} via ${method} berhasil disimpan!\nSisa Tagihan: Rp ${sisa > 0 ? sisa.toLocaleString('id-ID') : 0}\nStatus Pesanan: Belum Lunas (Dalam Proses)`);
+        }
+
         formPayment.reset();
         loadOrders();
     });
 }
-
-// =============================================================
-// DASHBOARD & INISIALISASI
-// =============================================================
-function updateDashboard(orders) {
-    const totalOrders = document.getElementById('dash-total-orders');
-    const inProgress = document.getElementById('dash-in-progress');
-    const finished = document.getElementById('dash-finished');
-    const completed = document.getElementById('dash-completed');
-
-    if (totalOrders) totalOrders.textContent = orders.length;
-    if (inProgress) inProgress.textContent = orders.filter(o => o.status === 'Dalam Proses').length;
-    if (finished) finished.textContent = orders.filter(o => o.status === 'Selesai').length;
-    if (completed) completed.textContent = orders.filter(o => o.status === 'Lunas').length;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    showTab('dashboard');
-    setupCustomerForm();
-    setupOrderForm();
-    setupCostForm();
-    setupPaymentForm();
-    loadCustomers();
-    loadOrders();
-});

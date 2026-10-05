@@ -4,7 +4,6 @@
 const SUPABASE_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_nuwL8Lj0kPSA80nEJGiQ5A_q8o62w5d';
 
-// Gunakan 'supabaseClient' agar tidak bentrok nama variabelnya
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // =============================================================
@@ -49,7 +48,7 @@ function renderCustomers(customers) {
     customers.forEach(cust => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${cust.code || cust.customer_code || '-'}</td>
+            <td>${cust.customer_code || '-'}</td>
             <td>${cust.name || '-'}</td>
             <td>${cust.phone || '-'}</td>
             <td>${cust.address || '-'}</td>
@@ -65,8 +64,8 @@ function updateCustomerDropdowns(customers) {
     selectOrder.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
     customers.forEach(cust => {
         const opt = document.createElement('option');
-        opt.value = cust.code || cust.customer_code || cust.id;
-        opt.textContent = `${cust.code || cust.customer_code || ''} - ${cust.name}`;
+        opt.value = cust.customer_code || cust.id;
+        opt.textContent = `${cust.customer_code || ''} - ${cust.name}`;
         selectOrder.appendChild(opt);
     });
 }
@@ -88,22 +87,23 @@ function setupCustomerForm() {
             return;
         }
 
-        let payload = { code, name, phone, address };
-        let { error } = await supabaseClient.from('customers').insert([payload]);
-
-        if (error && error.message.includes('customer_code')) {
-            payload = { customer_code: code, name, phone, address };
-            const res = await supabaseClient.from('customers').insert([payload]);
-            error = res.error;
-        }
+        // Pengiriman data persis menggunakan nama kolom 'customer_code'
+        const { error } = await supabaseClient
+            .from('customers')
+            .insert([{
+                customer_code: code,
+                name: name,
+                phone: phone,
+                address: address
+            }]);
 
         if (error) {
             alert('Gagal simpan ke Supabase:\n' + error.message);
-            console.error(error);
+            console.error('Detail Error:', error);
             return;
         }
 
-        alert('Data pelanggan berhasil disimpan permanen!');
+        alert('Data pelanggan berhasil disimpan permanen ke Supabase!');
         formCustomer.reset();
         loadCustomers();
     });
@@ -152,41 +152,67 @@ function renderOrders(orders) {
     });
 }
 
-function setupCustomerForm() {
-    const formCustomer = document.getElementById('form-customer');
-    if (!formCustomer) return;
+function setupOrderForm() {
+    const formOrder = document.getElementById('form-order');
+    if (!formOrder) return;
 
-    formCustomer.addEventListener('submit', async function(e) {
+    formOrder.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const code = document.getElementById('cust-code').value;
-        const name = document.getElementById('cust-name').value;
-        const phone = document.getElementById('cust-phone').value;
-        const address = document.getElementById('cust-address').value;
+        const customerCode = document.getElementById('order-customer').value;
+        const orderNumber = document.getElementById('order-number').value;
+        const product = document.getElementById('order-product').value;
+        const qty = parseInt(document.getElementById('order-qty').value, 10);
+        const price = parseFloat(document.getElementById('order-price').value);
 
         if (!supabaseClient) {
             alert('Supabase belum terkonfigurasi dengan benar.');
             return;
         }
 
-        // Kirim menggunakan nama kolom 'customer_code'
         const { error } = await supabaseClient
-            .from('customers')
+            .from('orders')
             .insert([{
-                customer_code: code,
-                name: name,
-                phone: phone,
-                address: address
+                customer_code: customerCode,
+                order_number: orderNumber,
+                product: product,
+                qty: qty,
+                price: price,
+                status: 'Dalam Proses',
+                total_cost: 0
             }]);
 
         if (error) {
-            alert('Gagal simpan ke Supabase:\n' + error.message);
+            alert('Gagal membuat pesanan: ' + error.message);
             console.error(error);
             return;
         }
 
-        alert('Data pelanggan berhasil disimpan permanen!');
-        formCustomer.reset();
-        loadCustomers();
+        alert('Pesanan baru berhasil disimpan!');
+        formOrder.reset();
+        loadOrders();
     });
 }
+
+function updateDashboard(orders) {
+    const totalOrders = document.getElementById('dash-total-orders');
+    const inProgress = document.getElementById('dash-in-progress');
+    const finished = document.getElementById('dash-finished');
+    const completed = document.getElementById('dash-completed');
+
+    if (totalOrders) totalOrders.textContent = orders.length;
+    if (inProgress) inProgress.textContent = orders.filter(o => o.status === 'Dalam Proses').length;
+    if (finished) finished.textContent = orders.filter(o => o.status === 'Selesai').length;
+    if (completed) completed.textContent = orders.filter(o => o.status === 'Lunas').length;
+}
+
+// =============================================================
+// INISIALISASI
+// =============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    showTab('dashboard');
+    setupCustomerForm();
+    setupOrderForm();
+    loadCustomers();
+    loadOrders();
+});

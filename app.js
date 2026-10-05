@@ -1,8 +1,10 @@
-// CONFIGURATION SUPABASE
+// =============================================================
+// KONFIGURASI SUPABASE
+// Pastikan Kamu Mengisi URL dan Anon Key dengan Benar
+// =============================================================
 const SUPABASE_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_nuwL8Lj0kPSA80nEJGiQ5A_q8o62w5d';
 
-// Inisialisasi Client Supabase
 const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // FUNGSI NAVIGASI TAB
@@ -18,11 +20,9 @@ function showTab(tabId) {
     }
 }
 
-// -------------------------------------------------------------
-// PELANGGAN (CUSTOMERS)
-// -------------------------------------------------------------
-
-// Load Data Pelanggan dari Supabase
+// =============================================================
+// DATA PELANGGAN (CUSTOMERS)
+// =============================================================
 async function loadCustomers() {
     if (!supabase) return;
 
@@ -47,8 +47,8 @@ function renderCustomers(customers) {
     customers.forEach(cust => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${cust.code || cust.customer_code}</td>
-            <td>${cust.name}</td>
+            <td>${cust.code || cust.customer_code || '-'}</td>
+            <td>${cust.name || '-'}</td>
             <td>${cust.phone || '-'}</td>
             <td>${cust.address || '-'}</td>
         `;
@@ -63,8 +63,8 @@ function updateCustomerDropdowns(customers) {
     selectOrder.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
     customers.forEach(cust => {
         const opt = document.createElement('option');
-        opt.value = cust.id || cust.code;
-        opt.textContent = `${cust.code || cust.customer_code} - ${cust.name}`;
+        opt.value = cust.code || cust.customer_code || cust.id;
+        opt.textContent = `${cust.code || cust.customer_code || ''} - ${cust.name}`;
         selectOrder.appendChild(opt);
     });
 }
@@ -81,33 +81,37 @@ function setupCustomerForm() {
         const phone = document.getElementById('cust-phone').value;
         const address = document.getElementById('cust-address').value;
 
-        // Simpan langsung ke database Supabase
-        if (supabase) {
-            const { data, error } = await supabase
-                .from('customers')
-                .insert([
-                    { code: code, name: name, phone: phone, address: address }
-                ]);
-
-            if (error) {
-                alert('Gagal menyimpan ke Supabase: ' + error.message);
-                console.error(error);
-                return;
-            }
-
-            alert('Data pelanggan berhasil disimpan permanen ke Supabase!');
-            loadCustomers(); // Load ulang data terbaru
-        } else {
-            alert('Supabase belum terkoneksi. Periksa URL dan API Key.');
+        if (!supabase) {
+            alert('Supabase belum terkonfigurasi! Cek URL dan Anon Key di app.js.');
+            return;
         }
 
+        // Mencoba kirim dengan format kolom 'code' atau 'customer_code'
+        let payload = { code, name, phone, address };
+        let { error } = await supabase.from('customers').insert([payload]);
+
+        // Jika error karena kolom bernama customer_code, coba payload cadangan
+        if (error && error.message.includes('customer_code')) {
+            payload = { customer_code: code, name, phone, address };
+            const res = await supabase.from('customers').insert([payload]);
+            error = res.error;
+        }
+
+        if (error) {
+            alert('Gagal simpan ke Supabase!\nPesan Error: ' + error.message);
+            console.error('Detail Error:', error);
+            return;
+        }
+
+        alert('Data pelanggan berhasil disimpan ke Supabase!');
         formCustomer.reset();
+        loadCustomers(); // Refresh daftar tabel
     });
 }
 
-// INITIALIZATION Saat Halaman Dimuat
+// INISIALISASI
 document.addEventListener('DOMContentLoaded', () => {
     showTab('dashboard');
     setupCustomerForm();
-    loadCustomers(); // Ambil data awal dari Supabase
+    loadCustomers();
 });

@@ -3,7 +3,7 @@
 // ==========================================================
 const SUPABASE_URL = 'https://uupwezyzfwfaupbreykx.supabase.co';
 // Ganti nilai kunci di bawah dengan anon public key kamu yang diawali "eyJ..."
-const SUPABASE_KEY = 'TEMPEL_ANON_PUBLIC_KEY_EYJ_KAMU_DI_SINI';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1cHdlenl6ZndmYXVwYnJleWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MDQ0MjIsImV4cCI6MjEwNzM4MDQyMn0.4OMiNnfAy6QLgpeHo7NMtCpL6GhKPED2iN0Y49w1t8o';
 
 const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient)
   ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)

@@ -2,7 +2,7 @@
 // KONFIGURASI SUPABASE
 // =============================================================
 const SUPABASE_URL = 'https://uupwezyzfwfaupbreykx.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_g-Zn6EpPAZwIT65zfz_BUw_n-Bmu9KU';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1cHdlenl6ZndmYXVwYnJleWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MDQ0MjIsImV4cCI6MjEwNzM4MDQyMn0.4OMiNnfAy6QLgpeHo7NMtCpL6GhKPED2iN0Y49w1t8o';
 
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 

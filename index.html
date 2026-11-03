@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KriyaCost - Sistem Job Order Costing UMKM</title>
+  <title>KriyaCost</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,17 +19,23 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
 
-  <!-- Header / Navbar -->
-  <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-30">
+  <!-- Header / Navbar Asli Kamu -->
+  <header class="bg-[#2e236c] text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
       <div class="flex items-center space-x-3">
-        <i class="fa-solid fa-calculator text-amber-400 text-2xl"></i>
+        <!-- Logo Ikon Kalkulator Asli Kamu -->
+        <div class="text-amber-400 text-2xl flex items-center justify-center">
+          <i class="fa-solid fa-calculator"></i>
+        </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight">KriyaCost</h1>
+          <!-- Nama & Tagline Asli Kamu -->
+          <h1 class="text-xl font-bold tracking-tight text-white leading-tight">KriyaCost</h1>
           <p class="text-xs text-indigo-200">Sistem Kalkulasi Biaya & Pendapatan Kerajinan Kayu</p>
         </div>
       </div>
-      <div class="flex items-center space-x-2 text-xs bg-indigo-800/80 px-3 py-1.5 rounded-lg border border-indigo-700">
+      
+      <!-- Badge Pill Supabase Connected Asli Kamu -->
+      <div class="flex items-center space-x-2 text-xs bg-indigo-950/60 border border-indigo-500/30 px-3 py-1.5 rounded-full">
         <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
         <span class="font-medium text-indigo-100">Supabase Connected</span>
       </div>
@@ -40,7 +46,7 @@
   <div class="bg-white border-b border-gray-200 sticky top-16 z-20 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <nav class="flex space-x-8" aria-label="Tabs">
-        <button onclick="showTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn border-b-2 border-indigo-600 py-4 px-1 text-sm font-semibold text-indigo-600 flex items-center space-x-2">
+        <button onclick="showTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn border-b-2 border-[#2e236c] py-4 px-1 text-sm font-semibold text-[#2e236c] flex items-center space-x-2">
           <i class="fa-solid fa-chart-pie"></i>
           <span>Dashboard & Analisis</span>
         </button>
@@ -65,7 +71,7 @@
       <!-- Ringkasan Kartu Metrik Keuangan -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-[#2e236c] flex items-center justify-center text-xl">
             <i class="fa-solid fa-wallet"></i>
           </div>
           <div>
@@ -87,7 +93,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
           <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
             <i class="fa-solid fa-chart-line"></i>
-            </div>
+          </div>
           <div>
             <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Kelayakan (BCR)</p>
             <h4 class="text-xl font-bold text-emerald-600">24.25x</h4>
@@ -117,7 +123,7 @@
               <i class="fa-solid fa-rotate-right"></i>
               <span>Refresh Grafik</span>
             </button>
-            <span class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full border border-indigo-100">Tahun Berjalan</span>
+            <span class="text-xs bg-purple-50 text-[#2e236c] font-semibold px-2.5 py-1 rounded-full border border-purple-100">Tahun Berjalan</span>
           </div>
         </div>
         <div class="relative h-72 w-full pt-4">
@@ -133,7 +139,7 @@
         <!-- Form Tambah Pelanggan -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-1">
           <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center space-x-2">
-            <i class="fa-solid fa-user-plus text-indigo-600"></i>
+            <i class="fa-solid fa-user-plus text-[#2e236c]"></i>
             <span>Tambah Pelanggan Baru</span>
           </h3>
 
@@ -141,28 +147,28 @@
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Kode Pelanggan (Otomatis)</label>
               <div class="relative">
-                <input type="text" id="customer-code" readonly class="w-full text-sm font-semibold bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-indigo-700 cursor-not-allowed">
+                <input type="text" id="customer-code" readonly class="w-full text-sm font-semibold bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-[#2e236c] cursor-not-allowed">
                 <i class="fa-solid fa-lock absolute right-3 top-3 text-slate-400 text-xs"></i>
               </div>
-              <p class="text-[11px] text-slate-400 mt-1">Kode digenerate otomatis berurutan dari database.</p>
+              <p class="text-[11px] text-slate-400 mt-1">Kode dibuat otomatis dari database.</p>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
-              <input type="text" id="customer-name" required placeholder="Contoh: Budi Santoso" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <input type="text" id="customer-name" required placeholder="Contoh: Budi Santoso" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor WhatsApp / HP</label>
-              <input type="text" id="customer-phone" placeholder="08xxxxxxxxxx" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <input type="text" id="customer-phone" placeholder="08xxxxxxxxxx" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Alamat Pengiriman</label>
-              <textarea id="customer-address" rows="3" placeholder="Alamat lengkap tujuan kirim..." class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+              <textarea id="customer-address" rows="3" placeholder="Alamat lengkap tujuan kirim..." class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none"></textarea>
             </div>
 
-            <button type="submit" id="btn-save-customer" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow transition text-sm flex items-center justify-center space-x-2">
+            <button type="submit" id="btn-save-customer" class="w-full bg-[#2e236c] hover:bg-[#231b53] text-white font-semibold py-2.5 px-4 rounded-xl shadow transition text-sm flex items-center justify-center space-x-2">
               <i class="fa-solid fa-floppy-disk"></i>
               <span>Simpan Pelanggan</span>
             </button>
@@ -173,10 +179,10 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
           <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
             <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
-              <i class="fa-solid fa-address-book text-indigo-600"></i>
+              <i class="fa-solid fa-address-book text-[#2e236c]"></i>
               <span>Database Pelanggan</span>
             </h3>
-            <button onclick="loadCustomers()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center space-x-1">
+            <button onclick="loadCustomers()" class="text-xs text-[#2e236c] hover:underline font-semibold flex items-center space-x-1">
               <i class="fa-solid fa-arrows-rotate"></i>
               <span>Refresh Data</span>
             </button>
@@ -211,31 +217,31 @@
         <!-- Form Pembuatan Pesanan -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-1">
           <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center space-x-2">
-            <i class="fa-solid fa-cart-plus text-indigo-600"></i>
+            <i class="fa-solid fa-cart-plus text-[#2e236c]"></i>
             <span>Input Job Order Baru</span>
           </h3>
 
           <form id="form-order" onsubmit="handleSaveOrder(event)" class="space-y-4">
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Pelanggan *</label>
-              <select id="order-customer-select" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <select id="order-customer-select" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
                 <option value="">-- Pilih Pelanggan --</option>
               </select>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Produk / Motif Ukir *</label>
-              <input type="text" id="order-product-name" required placeholder="Contoh: Kaligrafi Jati Ukir Jepara" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <input type="text" id="order-product-name" required placeholder="Contoh: Kaligrafi Jati Ukir Jepara" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Jumlah (Qty)</label>
-                <input type="number" id="order-quantity" value="1" min="1" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <input type="number" id="order-quantity" value="1" min="1" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Status Pengerjaan</label>
-                <select id="order-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <select id="order-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
                   <option value="Antrian">Antrian</option>
                   <option value="Produksi">Produksi</option>
                   <option value="Finishing">Finishing</option>
@@ -247,17 +253,17 @@
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Harga Jual (Rp) *</label>
-                <input type="number" id="order-selling-price" required placeholder="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <input type="number" id="order-selling-price" required placeholder="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Dibayar / DP (Rp)</label>
-                <input type="number" id="order-amount-paid" value="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <input type="number" id="order-amount-paid" value="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
               </div>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan Spesifikasi Kayu / Desain</label>
-              <textarea id="order-notes" rows="2" placeholder="Kayu jati perhutani, finishing melamin natural glossy..." class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+              <textarea id="order-notes" rows="2" placeholder="Kayu jati perhutani, finishing melamin natural glossy..." class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none"></textarea>
             </div>
 
             <button type="submit" id="btn-save-order" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow transition text-sm flex items-center justify-center space-x-2">
@@ -271,10 +277,10 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
           <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
             <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
-              <i class="fa-solid fa-list-check text-indigo-600"></i>
+              <i class="fa-solid fa-list-check text-[#2e236c]"></i>
               <span>Daftar Order Berjalan</span>
             </h3>
-            <button onclick="loadOrders()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center space-x-1">
+            <button onclick="loadOrders()" class="text-xs text-[#2e236c] hover:underline font-semibold flex items-center space-x-1">
               <i class="fa-solid fa-arrows-rotate"></i>
               <span>Refresh Order</span>
             </button>

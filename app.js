@@ -1,8 +1,8 @@
 // =============================================================
 // KONFIGURASI SUPABASE
 // =============================================================
-const SUPABASE_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_nuwL8Lj0kPSA80nEJGiQ5A_q8o62w5d';
+const SUPABASE_URL = 'https://uupwezyzfwfaupbreykx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_g-Zn6EpPAZwIT65zfz_BUw_n-Bmu9KU';
 
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 

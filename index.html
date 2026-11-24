@@ -1,9 +1,30 @@
-<!-- Header / Navbar -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KriyaCost</title>
+  
+  <!-- Tailwind CSS CDN (Wajib ada agar warna & layout muncul) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+  <!-- Header / Navbar -->
   <header class="bg-[#2e236c] text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
       <div class="flex items-center space-x-3">
-        <!-- Ganti 'NAMA_FILE_LOGO.png' sesuai nama asli di GitHub kamu -->
-        <img src="NAMA_FILE_LOGO.png" alt="Logo KriyaCost" class="h-10 w-10 object-contain rounded-lg">
+        <!-- GANTI 'logo.png' di bawah dengan nama file logo asli di GitHub kamu (misal: logo.png atau assets/logo.png) -->
+        <img src="logo.png" onerror="this.style.display='none'" alt="Logo KriyaCost" class="h-10 w-10 object-contain rounded-lg">
         <div>
           <h1 class="text-xl font-bold tracking-tight text-white leading-tight">KriyaCost</h1>
           <p class="text-xs text-indigo-200 italic">Nata Rasa, Ngukir Cita</p>
@@ -17,3 +38,26 @@
       </div>
     </div>
   </header>
+
+  <!-- Navigation Tabs -->
+  <div class="bg-white border-b border-gray-200 sticky top-16 z-20 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav class="flex space-x-8" aria-label="Tabs">
+        <button onclick="showTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn border-b-2 border-[#2e236c] py-4 px-1 text-sm font-semibold text-[#2e236c] flex items-center space-x-2">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard & Analisis</span>
+        </button>
+        <button onclick="showTab('tab-pelanggan')" id="btn-tab-pelanggan" class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center space-x-2">
+          <i class="fa-solid fa-users"></i>
+          <span>Kelola Pelanggan</span>
+        </button>
+        <button onclick="showTab('tab-pesanan')" id="btn-tab-pesanan" class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center space-x-2">
+          <i class="fa-solid fa-receipt"></i>
+          <span>Job Orders (Pesanan)</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6

@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- SheetJS untuk Export Excel (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
@@ -84,9 +83,13 @@
         <i class="fa-solid fa-boxes-packing"></i>
         <span>Stok & Restock Bahan</span>
       </button>
+      <button type="button" data-tab="expenses" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium py-4 text-sm flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <i class="fa-solid fa-money-bill-transfer"></i>
+        <span>Pengeluaran & Kirim</span>
+      </button>
       <button type="button" data-tab="reports" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium py-4 text-sm flex items-center space-x-2 whitespace-nowrap cursor-pointer">
         <i class="fa-solid fa-file-invoice-dollar"></i>
-        <span>Laporan Keuangan</span>
+        <span>Laporan & Jurnal</span>
       </button>
     </div>
   </nav>
@@ -96,7 +99,6 @@
 
     <!-- TAB 1: DASHBOARD -->
     <section id="sec-dashboard" class="sec-panel space-y-6">
-      <!-- Banner Peringatan Restock Bahan jika ada stok menipis -->
       <div id="dash-restock-alert" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-3">
         <div class="flex items-center space-x-3 text-xs sm:text-sm text-amber-900">
           <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg"></i>
@@ -119,32 +121,32 @@
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-arrow-up-right-dots"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase">Total Pengeluaran</p>
+            <h2 id="kpi-exp" class="text-xl font-bold text-rose-600">Rp 0</h2>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase">Selisih Bersih</p>
+            <h2 id="kpi-net" class="text-xl font-bold text-emerald-700">Rp 0</h2>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
           <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
             <i class="fa-solid fa-boxes-stacked"></i>
           </div>
           <div>
             <p class="text-xs font-medium text-slate-500 uppercase">Total Pesanan</p>
             <h2 id="kpi-cnt" class="text-xl font-bold text-slate-800">0</h2>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
-            <i class="fa-solid fa-chart-line"></i>
-          </div>
-          <div>
-            <p class="text-xs font-medium text-slate-500 uppercase">Kelayakan (BCR)</p>
-            <h2 class="text-xl font-bold text-emerald-600">24.25x</h2>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-          </div>
-          <div>
-            <p class="text-xs font-medium text-slate-500 uppercase">Payback Period</p>
-            <h2 class="text-xl font-bold text-slate-800">~1.2 Bulan</h2>
           </div>
         </div>
       </div>
@@ -239,7 +241,7 @@
                 <input type="number" id="o-qty" value="1" min="1" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
               </div>
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Target Selesai (Deadline) *</label>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Target Selesai *</label>
                 <input type="date" id="o-deadline" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
               </div>
             </div>
@@ -253,15 +255,21 @@
                 <input type="number" id="o-paid" value="0" min="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
               </div>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Status Awal</label>
-              <select id="o-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
-                <option value="Dalam Antrian">Dalam Antrian</option>
-                <option value="Dalam Proses">Dalam Proses</option>
-                <option value="Finishing">Finishing</option>
-                <option value="Selesai">Selesai</option>
-                <option value="Lunas">Lunas</option>
-              </select>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Biaya Kirim / Ongkir (Rp)</label>
+                <input type="number" id="o-ship" value="0" min="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Status Awal</label>
+                <select id="o-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
+                  <option value="Dalam Antrian">Dalam Antrian</option>
+                  <option value="Dalam Proses">Dalam Proses</option>
+                  <option value="Finishing">Finishing</option>
+                  <option value="Selesai">Selesai</option>
+                  <option value="Lunas">Lunas</option>
+                </select>
+              </div>
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan / Request Pelanggan</label>
@@ -288,7 +296,7 @@
                   <th class="py-3 px-2.5 font-semibold">Order & Pelanggan</th>
                   <th class="py-3 px-2.5 font-semibold">Produk & Catatan</th>
                   <th class="py-3 px-2.5 font-semibold">Target Selesai</th>
-                  <th class="py-3 px-2.5 font-semibold">Harga</th>
+                  <th class="py-3 px-2.5 font-semibold">Harga & Kirim</th>
                   <th class="py-3 px-2.5 font-semibold">Ubah Status</th>
                   <th class="py-3 px-2.5 font-semibold">Cetak</th>
                 </tr>
@@ -306,11 +314,11 @@
     <section id="sec-materials" class="sec-panel hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 class="text-base font-bold text-slate-900 mb-4">Tambah Bahan Pengukir</h3>
+          <h3 class="text-base font-bold text-slate-900 mb-4">Catat Bahan / Restock</h3>
           <form id="f-material" class="space-y-3.5">
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Bahan *</label>
-              <input type="text" id="m-name" required placeholder="Contoh: Papan Kayu Jati 3cm / Lem Fox" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              <input type="text" id="m-name" required placeholder="Contoh: Papan Kayu Jati / Lem Kayu" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -324,25 +332,29 @@
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Satuan</label>
-                <input type="text" id="m-unit" value="lembar / kaleng" placeholder="lembar / kg / kaleng" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+                <input type="text" id="m-unit" value="lembar" placeholder="lembar / kg / kaleng" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-3 gap-2">
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Stok Saat Ini *</label>
-                <input type="number" id="m-stock" required min="0" value="10" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Stok *</label>
+                <input type="number" id="m-stock" required min="0" value="10" class="w-full text-sm border border-slate-300 rounded-xl px-2.5 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
               </div>
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Batas Minimal Restock *</label>
-                <input type="number" id="m-min" required min="0" value="3" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Min. Restock *</label>
+                <input type="number" id="m-min" required min="0" value="3" class="w-full text-sm border border-slate-300 rounded-xl px-2.5 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Biaya Beli (Rp)</label>
+                <input type="number" id="m-cost" min="0" value="0" class="w-full text-sm border border-slate-300 rounded-xl px-2.5 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
               </div>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan Supplier / Jadwal Beli</label>
-              <input type="text" id="m-note" placeholder="Contoh: Beli di Toko Kayu Jepara tiap awal bulan" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan Supplier / Jadwal Restock</label>
+              <input type="text" id="m-note" placeholder="Contoh: Beli di Toko Kayu tiap awal bulan" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
             </div>
             <button type="submit" id="btn-m-submit" class="w-full bg-[#2e236c] hover:bg-[#231b53] text-white font-semibold py-2.5 px-4 rounded-xl shadow text-sm cursor-pointer">
-              Simpan Data Bahan
+              Simpan & Catat Biaya Restock
             </button>
           </form>
         </div>
@@ -351,7 +363,7 @@
           <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
             <div>
               <h3 class="text-base font-bold text-slate-900">Monitoring Stok & Jadwal Restock Bahan</h3>
-              <p class="text-[11px] text-slate-500">Klik +1 / -1 untuk update pemakaian bahan harian</p>
+              <p class="text-[11px] text-slate-500">Biaya beli bahan otomatis masuk ke akun Beban Bahan Baku & Restock</p>
             </div>
             <button type="button" id="btn-m-refresh" class="text-xs text-[#2e236c] hover:underline font-semibold cursor-pointer">Refresh</button>
           </div>
@@ -362,7 +374,7 @@
                   <th class="py-3 px-3 font-semibold">Bahan & Kategori</th>
                   <th class="py-3 px-3 font-semibold">Sisa Stok</th>
                   <th class="py-3 px-3 font-semibold">Min. Restock</th>
-                  <th class="py-3 px-3 font-semibold">Status Restock</th>
+                  <th class="py-3 px-3 font-semibold">Status</th>
                   <th class="py-3 px-3 font-semibold">Atur Stok</th>
                 </tr>
               </thead>
@@ -375,13 +387,76 @@
       </div>
     </section>
 
-    <!-- TAB 5: LAPORAN KEUANGAN SEDERHANA + EXPORT EXCEL & PDF -->
+    <!-- TAB 5: PENGELUARAN & BIAYA KIRIM -->
+    <section id="sec-expenses" class="sec-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-4">Catat Pengeluaran Operasional</h3>
+          <form id="f-expense" class="space-y-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Akun Beban *</label>
+              <select id="e-account" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
+                <option value="Beban Bahan Baku & Restock">Beban Bahan Baku & Restock</option>
+                <option value="Beban Pengiriman & Ongkir">Beban Pengiriman & Ongkir</option>
+                <option value="Beban Perlengkapan & Alat Ukir">Beban Perlengkapan & Alat Ukir</option>
+                <option value="Beban Listrik & Operasional">Beban Listrik & Operasional</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal *</label>
+                <input type="date" id="e-date" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nominal (Rp) *</label>
+                <input type="number" id="e-amount" required min="0" placeholder="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Keterangan Pengeluaran *</label>
+              <input type="text" id="e-desc" required placeholder="Contoh: Ongkir ekspedisi kayu / beli lem fox" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Terkait No. Order (Opsional)</label>
+              <input type="text" id="e-order" placeholder="Contoh: ORD-12345" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+            </div>
+            <button type="submit" id="btn-e-submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow text-sm cursor-pointer">
+              Simpan Pengeluaran
+            </button>
+          </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <h3 class="text-base font-bold text-slate-900">Daftar Pengeluaran & Biaya Kirim</h3>
+            <button type="button" id="btn-e-refresh" class="text-xs text-[#2e236c] hover:underline font-semibold cursor-pointer">Refresh</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="py-3 px-3 font-semibold">Tanggal</th>
+                  <th class="py-3 px-3 font-semibold">Nama Akun</th>
+                  <th class="py-3 px-3 font-semibold">Keterangan</th>
+                  <th class="py-3 px-3 font-semibold text-right">Nominal</th>
+                </tr>
+              </thead>
+              <tbody id="tb-expenses" class="divide-y divide-slate-100">
+                <tr><td colspan="4" class="py-6 text-center text-slate-400">Memuat pengeluaran...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: LAPORAN KEUANGAN & JURNAL SEDERHANA -->
     <section id="sec-reports" class="sec-panel hidden space-y-6">
       <div id="report-printable" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
-            <h3 class="text-lg font-bold text-slate-900">Laporan Keuangan Sederhana — KriyaCost</h3>
-            <p class="text-xs text-slate-500">Ringkasan uang masuk, total pesanan, dan sisa tagihan pelanggan</p>
+            <h3 class="text-lg font-bold text-slate-900">Laporan Keuangan & Jurnal Sederhana — KriyaCost</h3>
+            <p class="text-xs text-slate-500">Ringkasan akun pendapatan, pengeluaran (restock & kirim), laba/rugi, dan jurnal transaksi</p>
           </div>
           <div class="flex flex-wrap items-center gap-2 no-print">
             <button type="button" id="btn-rep-refresh" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg font-medium cursor-pointer">
@@ -396,21 +471,27 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Ringkasan Angka Utama -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-100">
-            <p class="text-xs font-semibold text-[#2e236c]">Total Nilai Pesanan (Omzet)</p>
-            <p id="rep-omzet" class="text-2xl font-bold text-slate-900 mt-1">Rp 0</p>
-            <p class="text-[11px] text-slate-600 mt-1">Total nilai seluruh pesanan masuk.</p>
+            <p class="text-xs font-semibold text-[#2e236c]">Pendapatan Penjualan</p>
+            <p id="rep-omzet" class="text-xl font-bold text-slate-900 mt-1">Rp 0</p>
+            <p class="text-[11px] text-slate-600 mt-1">Kas masuk: <span id="rep-paid" class="font-semibold text-emerald-700">Rp 0</span> • Piutang: <span id="rep-due" class="font-semibold text-amber-700">Rp 0</span></p>
+          </div>
+          <div class="p-4 rounded-xl bg-rose-50/70 border border-rose-100">
+            <p class="text-xs font-semibold text-rose-700">Total Pengeluaran</p>
+            <p id="rep-expense-total" class="text-xl font-bold text-rose-700 mt-1">Rp 0</p>
+            <p class="text-[11px] text-slate-600 mt-1">Restock bahan, ongkir & operasional.</p>
           </div>
           <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-100">
-            <p class="text-xs font-semibold text-emerald-700">Uang Sudah Diterima (Kas Masuk)</p>
-            <p id="rep-paid" class="text-2xl font-bold text-emerald-700 mt-1">Rp 0</p>
-            <p class="text-[11px] text-slate-600 mt-1">Total DP & pelunasan yang sudah dibayar.</p>
+            <p class="text-xs font-semibold text-emerald-700">Laba / Rugi Sederhana</p>
+            <p id="rep-profit" class="text-xl font-bold text-emerald-700 mt-1">Rp 0</p>
+            <p class="text-[11px] text-slate-600 mt-1">Pendapatan dikurangi total pengeluaran.</p>
           </div>
-          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-100">
-            <p class="text-xs font-semibold text-amber-700">Sisa Tagihan Pelanggan (Piutang)</p>
-            <p id="rep-receivable" class="text-2xl font-bold text-amber-700 mt-1">Rp 0</p>
-            <p class="text-[11px] text-slate-600 mt-1">Dana yang masih harus ditagihkan.</p>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <p class="text-xs font-semibold text-slate-700">Rincian Beban Utama</p>
+            <p class="text-xs text-slate-700 mt-1">Bahan & Restock: <strong id="rep-exp-mat">Rp 0</strong></p>
+            <p class="text-xs text-slate-700">Pengiriman / Kirim: <strong id="rep-exp-ship">Rp 0</strong></p>
           </div>
         </div>
 
@@ -418,24 +499,26 @@
           Memuat ringkasan kondisi keuangan...
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
-                <th class="py-3 px-3 font-semibold">No. Order</th>
-                <th class="py-3 px-3 font-semibold">Pelanggan</th>
-                <th class="py-3 px-3 font-semibold">Produk</th>
-                <th class="py-3 px-3 font-semibold">Target Selesai</th>
-                <th class="py-3 px-3 font-semibold">Harga Jual</th>
-                <th class="py-3 px-3 font-semibold">Sudah Dibayar</th>
-                <th class="py-3 px-3 font-semibold">Sisa Tagihan</th>
-                <th class="py-3 px-3 font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody id="tb-reports" class="divide-y divide-slate-100">
-              <tr><td colspan="8" class="py-6 text-center text-slate-400">Memuat laporan...</td></tr>
-            </tbody>
-          </table>
+        <!-- Tabel Jurnal / Buku Kas Sederhana -->
+        <div>
+          <h4 class="text-sm font-bold text-slate-900 mb-3">Jurnal / Catatan Akun Sederhana (Masuk & Keluar)</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="py-3 px-3 font-semibold">Tanggal</th>
+                  <th class="py-3 px-3 font-semibold">Jenis</th>
+                  <th class="py-3 px-3 font-semibold">Nama Akun</th>
+                  <th class="py-3 px-3 font-semibold">Keterangan</th>
+                  <th class="py-3 px-3 font-semibold text-right">Masuk (Rp)</th>
+                  <th class="py-3 px-3 font-semibold text-right">Keluar (Rp)</th>
+                </tr>
+              </thead>
+              <tbody id="tb-journal" class="divide-y divide-slate-100">
+                <tr><td colspan="6" class="py-6 text-center text-slate-400">Memuat jurnal...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -488,8 +571,12 @@
 
       <div class="space-y-1.5 text-xs border-t border-slate-200 pt-3">
         <div class="flex justify-between text-slate-600">
-          <span>Total Tagihan</span>
+          <span>Harga Produk / Order</span>
           <span id="doc-sum-price" class="font-semibold text-slate-800">Rp 0</span>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>Biaya Kirim / Ongkir</span>
+          <span id="doc-sum-ship" class="font-semibold text-slate-800">Rp 0</span>
         </div>
         <div class="flex justify-between text-emerald-700">
           <span>Sudah Dibayar / DP</span>
@@ -527,6 +614,9 @@
 
     let chartObj = null;
     let cachedOrders = [];
+    let cachedExpenses = [];
+    let cachedMaterials = [];
+    let cachedJournal = [];
     const fmt = n => 'Rp ' + (Number(n) || 0).toLocaleString('id-ID');
 
     function setConn(ok, msg) {
@@ -572,7 +662,13 @@
       if (name === 'customers') { nextCustCode(); loadCustomers(); }
       if (name === 'orders') { fillCustomerSelect(); loadOrders(); }
       if (name === 'materials') loadMaterials();
+      if (name === 'expenses') { setDefaultExpenseDate(); loadExpenses(); }
       if (name === 'reports') loadReports();
+    }
+
+    function setDefaultExpenseDate() {
+      const el = document.getElementById('e-date');
+      if (el && !el.value) el.value = new Date().toISOString().slice(0, 10);
     }
 
     // ==================== PELANGGAN ====================
@@ -656,32 +752,36 @@
           return;
         }
         const statuses = ['Dalam Antrian', 'Dalam Proses', 'Finishing', 'Selesai', 'Lunas'];
-        tb.innerHTML = data.map((o, idx) => `
-          <tr class="hover:bg-slate-50 align-top">
-            <td class="py-3 px-2.5">
-              <div class="font-bold text-slate-800">${o.order_number || ('ORD-' + o.id)}</div>
-              <div class="text-slate-600 mt-0.5">${o.customer_id || '-'}</div>
-            </td>
-            <td class="py-3 px-2.5">
-              <div class="font-semibold text-slate-900">${o.product_name} (${o.quantity || 1} pcs)</div>
-              ${o.notes ? `<div class="mt-1 text-[11px] text-indigo-900 bg-indigo-50/70 border border-indigo-100 rounded px-2 py-0.5 inline-block"><i class="fa-regular fa-note-sticky mr-1"></i>${o.notes}</div>` : '<div class="text-[11px] text-slate-400 mt-0.5">Tanpa catatan</div>'}
-            </td>
-            <td class="py-3 px-2.5 whitespace-nowrap">${formatDeadlineBadge(o.deadline, o.status)}</td>
-            <td class="py-3 px-2.5 font-semibold text-slate-800 whitespace-nowrap">
-              <div>${fmt(o.selling_price)}</div>
-              <div class="text-[10px] font-normal text-emerald-700">Bayar: ${fmt(o.total_paid)}</div>
-            </td>
-            <td class="py-3 px-2.5">
-              <select onchange="changeOrderStatus(${o.id}, this.value)" class="text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-[#2e236c] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2e236c]">
-                ${statuses.map(st => `<option value="${st}" ${(o.status || 'Dalam Antrian') === st ? 'selected' : ''}>${st}</option>`).join('')}
-              </select>
-            </td>
-            <td class="py-3 px-2.5 space-x-1 whitespace-nowrap">
-              <button type="button" onclick="openPrintDoc(${idx}, 'INVOICE')" class="px-2 py-1 rounded bg-indigo-50 text-[#2e236c] hover:bg-indigo-100 font-semibold text-[11px] cursor-pointer">Invoice</button>
-              <button type="button" onclick="openPrintDoc(${idx}, 'NOTA')" class="px-2 py-1 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-[11px] cursor-pointer">Nota</button>
-            </td>
-          </tr>
-        `).join('');
+        tb.innerHTML = data.map((o, idx) => {
+          const ship = Number(o.shipping_cost) || 0;
+          return `
+            <tr class="hover:bg-slate-50 align-top">
+              <td class="py-3 px-2.5">
+                <div class="font-bold text-slate-800">${o.order_number || ('ORD-' + o.id)}</div>
+                <div class="text-slate-600 mt-0.5">${o.customer_id || '-'}</div>
+              </td>
+              <td class="py-3 px-2.5">
+                <div class="font-semibold text-slate-900">${o.product_name} (${o.quantity || 1} pcs)</div>
+                ${o.notes ? `<div class="mt-1 text-[11px] text-indigo-900 bg-indigo-50/70 border border-indigo-100 rounded px-2 py-0.5 inline-block"><i class="fa-regular fa-note-sticky mr-1"></i>${o.notes}</div>` : '<div class="text-[11px] text-slate-400 mt-0.5">Tanpa catatan</div>'}
+              </td>
+              <td class="py-3 px-2.5 whitespace-nowrap">${formatDeadlineBadge(o.deadline, o.status)}</td>
+              <td class="py-3 px-2.5 font-semibold text-slate-800 whitespace-nowrap">
+                <div>${fmt(o.selling_price)}</div>
+                <div class="text-[10px] font-normal text-emerald-700">Bayar: ${fmt(o.total_paid)}</div>
+                ${ship > 0 ? `<div class="text-[10px] font-normal text-slate-500">Kirim: ${fmt(ship)}</div>` : ''}
+              </td>
+              <td class="py-3 px-2.5">
+                <select onchange="changeOrderStatus(${o.id}, this.value)" class="text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-[#2e236c] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2e236c]">
+                  ${statuses.map(st => `<option value="${st}" ${(o.status || 'Dalam Antrian') === st ? 'selected' : ''}>${st}</option>`).join('')}
+                </select>
+              </td>
+              <td class="py-3 px-2.5 space-x-1 whitespace-nowrap">
+                <button type="button" onclick="openPrintDoc(${idx}, 'INVOICE')" class="px-2 py-1 rounded bg-indigo-50 text-[#2e236c] hover:bg-indigo-100 font-semibold text-[11px] cursor-pointer">Invoice</button>
+                <button type="button" onclick="openPrintDoc(${idx}, 'NOTA')" class="px-2 py-1 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-[11px] cursor-pointer">Nota</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
       } catch (err) {
         tb.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-rose-500">${err.message}</td></tr>`;
       }
@@ -691,14 +791,12 @@
       if (!sb) return;
       const updateObj = { status: newStatus };
       const targetOrder = cachedOrders.find(x => x.id === orderId);
-      if (newStatus === 'Lunas' && targetOrder && Number(targetOrder.total_paid || 0) < Number(targetOrder.selling_price || 0)) {
-        updateObj.total_paid = Number(targetOrder.selling_price) || 0;
+      const totalBill = (Number(targetOrder?.selling_price) || 0) + (Number(targetOrder?.shipping_cost) || 0);
+      if (newStatus === 'Lunas' && targetOrder && Number(targetOrder.total_paid || 0) < totalBill) {
+        updateObj.total_paid = totalBill;
       }
       const { error } = await sb.from('orders').update(updateObj).eq('id', orderId);
-      if (error) {
-        alert('Gagal mengubah status: ' + error.message);
-        return;
-      }
+      if (error) { alert('Gagal mengubah status: ' + error.message); return; }
       await loadOrders();
       await loadDashboard();
     }
@@ -709,14 +807,17 @@
       const btn = document.getElementById('btn-o-submit');
       btn.disabled = true;
 
+      const orderNumber = 'ORD-' + Date.now().toString().slice(-5);
+      const shipCost = Number(document.getElementById('o-ship').value) || 0;
       const payload = {
-        order_number: 'ORD-' + Date.now().toString().slice(-5),
+        order_number: orderNumber,
         customer_id: document.getElementById('o-cust').value,
         product_name: document.getElementById('o-prod').value.trim(),
         quantity: Number(document.getElementById('o-qty').value) || 1,
         deadline: document.getElementById('o-deadline').value || null,
         status: document.getElementById('o-status').value,
         selling_price: Number(document.getElementById('o-price').value) || 0,
+        shipping_cost: shipCost,
         total_paid: Number(document.getElementById('o-paid').value) || 0,
         notes: document.getElementById('o-notes').value.trim()
       };
@@ -725,10 +826,20 @@
       btn.disabled = false;
       if (error) { alert('Gagal menyimpan pesanan: ' + error.message); return; }
 
+      if (shipCost > 0) {
+        await sb.from('expenses').insert([{
+          expense_date: new Date().toISOString().slice(0, 10),
+          account_name: 'Beban Pengiriman & Ongkir',
+          description: `Biaya kirim pesanan ${orderNumber} (${payload.product_name})`,
+          amount: shipCost,
+          related_order: orderNumber
+        }]);
+      }
+
       document.getElementById('f-order').reset();
       await loadOrders();
       await loadDashboard();
-      alert(`Pesanan ${payload.order_number} berhasil disimpan!`);
+      alert(`Pesanan ${orderNumber} berhasil disimpan!`);
     }
 
     // ==================== CETAK INVOICE & NOTA ====================
@@ -736,8 +847,10 @@
       const o = cachedOrders[index];
       if (!o) return;
       const price = Number(o.selling_price) || 0;
+      const ship = Number(o.shipping_cost) || 0;
+      const totalAll = price + ship;
       const paid = Number(o.total_paid) || 0;
-      const due = Math.max(0, price - paid);
+      const due = Math.max(0, totalAll - paid);
 
       document.getElementById('doc-badge').textContent = type === 'NOTA' ? 'NOTA PEMBAYARAN' : 'INVOICE TAGIHAN';
       document.getElementById('doc-number').textContent = o.order_number || ('ORD-' + o.id);
@@ -750,6 +863,7 @@
       document.getElementById('doc-qty').textContent = o.quantity || 1;
       document.getElementById('doc-price').textContent = fmt(price);
       document.getElementById('doc-sum-price').textContent = fmt(price);
+      document.getElementById('doc-sum-ship').textContent = fmt(ship);
       document.getElementById('doc-sum-paid').textContent = fmt(paid);
       document.getElementById('doc-sum-due').textContent = fmt(due);
 
@@ -768,15 +882,19 @@
     }
 
     // ==================== STOK & RESTOCK BAHAN ====================
+    async function fetchAllMaterials() {
+      if (!sb) return [];
+      const { data, error } = await sb.from('materials').select('*').order('id', { ascending: false });
+      if (error) return [];
+      cachedMaterials = data || [];
+      return cachedMaterials;
+    }
+
     async function loadMaterials() {
       const tb = document.getElementById('tb-materials');
       if (!sb) return;
-      const { data, error } = await sb.from('materials').select('*').order('id', { ascending: false });
-      if (error) {
-        tb.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-rose-500">Tabel materials belum siap: ${error.message}</td></tr>`;
-        return;
-      }
-      if (!data || !data.length) {
+      const data = await fetchAllMaterials();
+      if (!data.length) {
         tb.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Belum ada data bahan ukir (kayu, lem, amplas, politur).</td></tr>';
         return;
       }
@@ -809,8 +927,7 @@
 
     async function adjustStock(id, newVal) {
       if (!sb) return;
-      const safeVal = Math.max(0, newVal);
-      const { error } = await sb.from('materials').update({ stock: safeVal, updated_at: new Date().toISOString() }).eq('id', id);
+      const { error } = await sb.from('materials').update({ stock: Math.max(0, newVal), updated_at: new Date().toISOString() }).eq('id', id);
       if (error) { alert('Gagal update stok: ' + error.message); return; }
       await loadMaterials();
       await checkRestockAlert();
@@ -821,79 +938,193 @@
       if (!sb) return;
       const btn = document.getElementById('btn-m-submit');
       btn.disabled = true;
+
+      const name = document.getElementById('m-name').value.trim();
+      const stock = Number(document.getElementById('m-stock').value) || 0;
+      const unit = document.getElementById('m-unit').value.trim() || 'pcs';
+      const cost = Number(document.getElementById('m-cost').value) || 0;
+
       const payload = {
-        name: document.getElementById('m-name').value.trim(),
+        name,
         category: document.getElementById('m-cat').value,
-        unit: document.getElementById('m-unit').value.trim() || 'pcs',
-        stock: Number(document.getElementById('m-stock').value) || 0,
+        unit,
+        stock,
         min_stock: Number(document.getElementById('m-min').value) || 0,
+        restock_cost: cost,
         restock_note: document.getElementById('m-note').value.trim()
       };
+
       const { error } = await sb.from('materials').insert([payload]);
       btn.disabled = false;
       if (error) { alert('Gagal menyimpan bahan: ' + error.message); return; }
+
+      if (cost > 0) {
+        await sb.from('expenses').insert([{
+          expense_date: new Date().toISOString().slice(0, 10),
+          account_name: 'Beban Bahan Baku & Restock',
+          description: `Restock / pembelian bahan: ${name} (${stock} ${unit})`,
+          amount: cost
+        }]);
+      }
+
       document.getElementById('f-material').reset();
       await loadMaterials();
       await checkRestockAlert();
-      alert(`Bahan "${payload.name}" berhasil ditambahkan!`);
+      await loadDashboard();
+      alert(`Bahan "${name}" tersimpan!`);
     }
 
     async function checkRestockAlert() {
       const box = document.getElementById('dash-restock-alert');
       const txt = document.getElementById('dash-restock-text');
       if (!sb || !box) return;
-      const { data, error } = await sb.from('materials').select('name, stock, min_stock, unit');
-      if (error || !data) return;
+      const data = await fetchAllMaterials();
       const lowItems = data.filter(m => (Number(m.stock) || 0) <= (Number(m.min_stock) || 0));
       if (lowItems.length > 0) {
-        const names = lowItems.map(i => `${i.name} (sisa ${i.stock} ${i.unit || ''})`).join(', ');
-        txt.textContent = `Waktunya Restock Bahan: ${names}`;
+        txt.textContent = 'Waktunya Restock Bahan: ' + lowItems.map(i => `${i.name} (sisa ${i.stock} ${i.unit || ''})`).join(', ');
         box.classList.remove('hidden');
       } else {
         box.classList.add('hidden');
       }
     }
 
-    // ==================== LAPORAN KEUANGAN + EXCEL & PDF ====================
+    // ==================== PENGELUARAN ====================
+    async function fetchAllExpenses() {
+      if (!sb) return [];
+      const { data, error } = await sb.from('expenses').select('*').order('id', { ascending: false });
+      if (error) return [];
+      cachedExpenses = data || [];
+      return cachedExpenses;
+    }
+
+    async function loadExpenses() {
+      const tb = document.getElementById('tb-expenses');
+      if (!sb) return;
+      const data = await fetchAllExpenses();
+      if (!data.length) {
+        tb.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada pengeluaran tercatat.</td></tr>';
+        return;
+      }
+      tb.innerHTML = data.map(ex => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-3 text-slate-600 whitespace-nowrap">${ex.expense_date || '-'}</td>
+          <td class="py-3 px-3 font-semibold text-[#2e236c]">${ex.account_name || 'Beban Operasional'}</td>
+          <td class="py-3 px-3 text-slate-800">${ex.description || '-'} ${ex.related_order ? `<span class="text-[11px] text-slate-400">(${ex.related_order})</span>` : ''}</td>
+          <td class="py-3 px-3 text-right font-bold text-rose-600 whitespace-nowrap">${fmt(ex.amount)}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function onSaveExpense(e) {
+      e.preventDefault();
+      if (!sb) return;
+      const btn = document.getElementById('btn-e-submit');
+      btn.disabled = true;
+
+      const payload = {
+        expense_date: document.getElementById('e-date').value,
+        account_name: document.getElementById('e-account').value,
+        description: document.getElementById('e-desc').value.trim(),
+        amount: Number(document.getElementById('e-amount').value) || 0,
+        related_order: document.getElementById('e-order').value.trim() || null
+      };
+
+      const { error } = await sb.from('expenses').insert([payload]);
+      btn.disabled = false;
+      if (error) { alert('Gagal menyimpan pengeluaran: ' + error.message); return; }
+
+      document.getElementById('f-expense').reset();
+      setDefaultExpenseDate();
+      await loadExpenses();
+      await loadDashboard();
+      alert('Pengeluaran berhasil dicatat!');
+    }
+
+    // ==================== LAPORAN & JURNAL SEDERHANA ====================
     async function loadReports() {
-      const tb = document.getElementById('tb-reports');
+      const tb = document.getElementById('tb-journal');
       const nar = document.getElementById('rep-narrative');
       try {
-        const data = await fetchAllOrders();
-        const omzet = data.reduce((s, r) => s + (Number(r.selling_price) || 0), 0);
-        const paid = data.reduce((s, r) => s + (Number(r.total_paid) || 0), 0);
-        const due = data.reduce((s, r) => s + Math.max(0, (Number(r.selling_price) || 0) - (Number(r.total_paid) || 0)), 0);
+        const [orders, expenses] = await Promise.all([fetchAllOrders(), fetchAllExpenses()]);
+
+        const omzet = orders.reduce((s, r) => s + (Number(r.selling_price) || 0), 0);
+        const paid = orders.reduce((s, r) => s + (Number(r.total_paid) || 0), 0);
+        const due = orders.reduce((s, r) => {
+          const totalOrder = (Number(r.selling_price) || 0) + (Number(r.shipping_cost) || 0);
+          return s + Math.max(0, totalOrder - (Number(r.total_paid) || 0));
+        }, 0);
+
+        const expTotal = expenses.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const expMat = expenses
+          .filter(r => (r.account_name || '').toLowerCase().includes('bahan'))
+          .reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const expShip = expenses
+          .filter(r => (r.account_name || '').toLowerCase().includes('kirim') || (r.account_name || '').toLowerCase().includes('ongkir'))
+          .reduce((s, r) => s + (Number(r.amount) || 0), 0);
+
+        const profit = omzet - expTotal;
 
         document.getElementById('rep-omzet').textContent = fmt(omzet);
         document.getElementById('rep-paid').textContent = fmt(paid);
-        document.getElementById('rep-receivable').textContent = fmt(due);
+        document.getElementById('rep-due').textContent = fmt(due);
+        document.getElementById('rep-expense-total').textContent = fmt(expTotal);
+        document.getElementById('rep-exp-mat').textContent = fmt(expMat);
+        document.getElementById('rep-exp-ship').textContent = fmt(expShip);
 
-        nar.textContent = data.length === 0
-          ? 'Belum ada pesanan tercatat. Input pesanan terlebih dahulu pada tab Job Orders.'
-          : `Ringkasan Keuangan: Dari total ${data.length} pesanan, nilai penjualan usaha sebesar ${fmt(omzet)}. Dana yang sudah diterima dari pelanggan sebesar ${fmt(paid)}, sedangkan sisa tagihan yang belum dibayar sebesar ${fmt(due)}.`;
+        const profitEl = document.getElementById('rep-profit');
+        profitEl.textContent = (profit < 0 ? '- ' : '') + fmt(Math.abs(profit));
+        profitEl.className = 'text-xl font-bold mt-1 ' + (profit >= 0 ? 'text-emerald-700' : 'text-rose-700');
 
-        if (!data.length) {
-          tb.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-slate-400">Belum ada data laporan.</td></tr>';
+        nar.textContent =
+          `Ringkasan Bahasa Sederhana: Total pendapatan pesanan tercatat ${fmt(omzet)} (kas masuk ${fmt(paid)}, sisa tagihan pelanggan ${fmt(due)}). ` +
+          `Total pengeluaran usaha sebesar ${fmt(expTotal)} (terdiri dari bahan & restock ${fmt(expMat)} serta pengiriman/ongkir ${fmt(expShip)}). ` +
+          `Selisih pendapatan dikurangi pengeluaran saat ini adalah ${(profit < 0 ? 'rugi ' : 'laba ')}${fmt(Math.abs(profit))}.`;
+
+        const journalRows = [];
+        orders.forEach(o => {
+          const d = o.created_at ? new Date(o.created_at).toISOString().slice(0, 10) : '-';
+          const isPaid = Number(o.total_paid || 0) >= Number(o.selling_price || 0) && Number(o.selling_price || 0) > 0;
+          journalRows.push({
+            date: d,
+            type: 'Pendapatan',
+            account: isPaid ? 'Kas / Pendapatan Penjualan' : 'Piutang / Pendapatan Penjualan',
+            desc: `${o.order_number || ('ORD-' + o.id)} — ${o.product_name} (${o.customer_id || '-'})`,
+            inAmt: Number(o.selling_price) || 0,
+            outAmt: 0
+          });
+        });
+
+        expenses.forEach(ex => {
+          journalRows.push({
+            date: ex.expense_date || '-',
+            type: 'Pengeluaran',
+            account: ex.account_name || 'Beban Operasional Lain',
+            desc: ex.description || '-',
+            inAmt: 0,
+            outAmt: Number(ex.amount) || 0
+          });
+        });
+
+        journalRows.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+        cachedJournal = journalRows;
+
+        if (!journalRows.length) {
+          tb.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada transaksi jurnal.</td></tr>';
           return;
         }
 
-        tb.innerHTML = data.map(o => {
-          const p = Number(o.selling_price) || 0;
-          const d = Number(o.total_paid) || 0;
-          const rem = Math.max(0, p - d);
-          return `
-            <tr class="hover:bg-slate-50">
-              <td class="py-3 px-3 font-semibold text-slate-800">${o.order_number || ('ORD-' + o.id)}</td>
-              <td class="py-3 px-3 text-slate-700">${o.customer_id || '-'}</td>
-              <td class="py-3 px-3 text-slate-800">${o.product_name || '-'} (${o.quantity || 1})</td>
-              <td class="py-3 px-3 text-slate-600">${o.deadline || '-'}</td>
-              <td class="py-3 px-3 font-semibold">${fmt(p)}</td>
-              <td class="py-3 px-3 text-emerald-700 font-medium">${fmt(d)}</td>
-              <td class="py-3 px-3 text-amber-700 font-medium">${fmt(rem)}</td>
-              <td class="py-3 px-3 font-semibold text-[#2e236c]">${o.status || '-'}</td>
-            </tr>
-          `;
-        }).join('');
+        tb.innerHTML = journalRows.map(j => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-3 text-slate-600 whitespace-nowrap">${j.date}</td>
+            <td class="py-3 px-3">
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${j.type === 'Pendapatan' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${j.type}</span>
+            </td>
+            <td class="py-3 px-3 font-semibold text-[#2e236c]">${j.account}</td>
+            <td class="py-3 px-3 text-slate-800">${j.desc}</td>
+            <td class="py-3 px-3 text-right font-semibold text-emerald-700 whitespace-nowrap">${j.inAmt > 0 ? fmt(j.inAmt) : '-'}</td>
+            <td class="py-3 px-3 text-right font-semibold text-rose-600 whitespace-nowrap">${j.outAmt > 0 ? fmt(j.outAmt) : '-'}</td>
+          </tr>
+        `).join('');
       } catch (err) {
         nar.textContent = 'Gagal memuat laporan: ' + err.message;
       }
@@ -904,30 +1135,42 @@
         alert('Library Excel belum siap, coba refresh halaman.');
         return;
       }
-      if (!cachedOrders.length) {
-        alert('Belum ada data pesanan untuk diunduh.');
+      if (!cachedJournal.length && !cachedOrders.length) {
+        alert('Belum ada data laporan untuk diunduh.');
         return;
       }
-      const rows = cachedOrders.map(o => {
+
+      const wb = XLSX.utils.book_new();
+
+      const journalExport = cachedJournal.map(j => ({
+        'Tanggal': j.date,
+        'Jenis': j.type,
+        'Nama Akun': j.account,
+        'Keterangan': j.desc,
+        'Masuk (Rp)': j.inAmt,
+        'Keluar (Rp)': j.outAmt
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(journalExport), 'Jurnal Sederhana');
+
+      const orderExport = cachedOrders.map(o => {
         const price = Number(o.selling_price) || 0;
+        const ship = Number(o.shipping_cost) || 0;
         const paid = Number(o.total_paid) || 0;
         return {
           'No. Order': o.order_number || ('ORD-' + o.id),
           'Pelanggan': o.customer_id || '-',
           'Produk': o.product_name || '-',
-          'Qty': Number(o.quantity) || 1,
           'Target Selesai': o.deadline || '-',
-          'Catatan Pelanggan': o.notes || '-',
+          'Catatan': o.notes || '-',
           'Harga Jual (Rp)': price,
+          'Biaya Kirim (Rp)': ship,
           'Sudah Dibayar (Rp)': paid,
-          'Sisa Tagihan (Rp)': Math.max(0, price - paid),
+          'Sisa Tagihan (Rp)': Math.max(0, price + ship - paid),
           'Status': o.status || 'Dalam Antrian'
         };
       });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(orderExport), 'Pesanan');
 
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Laporan Keuangan');
       XLSX.writeFile(wb, `Laporan_Keuangan_KriyaCost_${new Date().toISOString().slice(0, 10)}.xlsx`);
     }
 
@@ -943,22 +1186,29 @@
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
       const series = new Array(12).fill(0);
       let rev = 0;
+      let exp = 0;
       let cnt = 0;
 
       if (sb) {
         try {
-          const data = await fetchAllOrders();
-          cnt = data.length;
-          data.forEach(r => {
+          const [orders, expenses] = await Promise.all([fetchAllOrders(), fetchAllExpenses()]);
+          cnt = orders.length;
+          orders.forEach(r => {
             const p = Number(r.selling_price) || 0;
             rev += p;
             const m = r.created_at ? new Date(r.created_at).getMonth() : -1;
             if (m >= 0 && m < 12) series[m] += p;
           });
+          exp = expenses.reduce((s, r) => s + (Number(r.amount) || 0), 0);
         } catch {}
       }
 
+      const net = rev - exp;
       document.getElementById('kpi-rev').textContent = fmt(rev);
+      document.getElementById('kpi-exp').textContent = fmt(exp);
+      const netEl = document.getElementById('kpi-net');
+      netEl.textContent = (net < 0 ? '- ' : '') + fmt(Math.abs(net));
+      netEl.className = 'text-xl font-bold ' + (net >= 0 ? 'text-emerald-700' : 'text-rose-600');
       document.getElementById('kpi-cnt').textContent = String(cnt);
       await checkRestockAlert();
 
@@ -997,14 +1247,17 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      setDefaultExpenseDate();
       document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => goTab(b.dataset.tab)));
       document.getElementById('f-customer')?.addEventListener('submit', onSaveCustomer);
       document.getElementById('f-order')?.addEventListener('submit', onSaveOrder);
       document.getElementById('f-material')?.addEventListener('submit', onSaveMaterial);
+      document.getElementById('f-expense')?.addEventListener('submit', onSaveExpense);
       document.getElementById('btn-reload-dash')?.addEventListener('click', loadDashboard);
       document.getElementById('btn-c-refresh')?.addEventListener('click', loadCustomers);
       document.getElementById('btn-o-refresh')?.addEventListener('click', loadOrders);
       document.getElementById('btn-m-refresh')?.addEventListener('click', loadMaterials);
+      document.getElementById('btn-e-refresh')?.addEventListener('click', loadExpenses);
       document.getElementById('btn-rep-refresh')?.addEventListener('click', loadReports);
       document.getElementById('btn-export-excel')?.addEventListener('click', exportReportToExcel);
       document.getElementById('btn-export-pdf')?.addEventListener('click', exportReportToPDF);

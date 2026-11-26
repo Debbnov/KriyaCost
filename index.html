@@ -1,82 +1,73 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KriyaCost - Nata Rasa, Ngukir Cita</title>
-  
-  <!-- Tailwind CSS -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KriyaCost — Nata Rasa, Ngukir Cita</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
 
-  <!-- Header / Navbar -->
+  <!-- Header -->
   <header class="bg-[#2e236c] text-white shadow-md sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <!-- Ganti 'logo.png' jika nama file gambar logomu di GitHub berbeda -->
-        <img src="logo.png" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='flex';" alt="Logo KriyaCost" class="h-10 w-10 object-contain rounded-lg bg-white/10 p-1">
-        <div id="fallback-logo" style="display:none;" class="h-10 w-10 rounded-lg bg-amber-400/20 text-amber-400 items-center justify-center text-xl">
+        <img
+          src="logo.png"
+          alt="Logo KriyaCost"
+          onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');"
+          class="h-10 w-10 object-contain rounded-lg bg-white/10 p-1"
+        />
+        <div id="logo-fallback" class="hidden h-10 w-10 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center text-xl">
           <i class="fa-solid fa-calculator"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight text-white leading-tight">KriyaCost</h1>
+          <h1 class="text-lg sm:text-xl font-bold leading-tight">KriyaCost</h1>
           <p class="text-xs text-indigo-200 italic">Nata Rasa, Ngukir Cita</p>
         </div>
       </div>
-      
-      <!-- Indikator Koneksi -->
-      <div id="connection-badge" class="flex items-center space-x-2 text-xs bg-indigo-950/60 border border-indigo-500/30 px-3 py-1.5 rounded-full">
-        <span id="connection-dot" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-        <span id="connection-text" class="font-medium text-indigo-100">Memeriksa Koneksi...</span>
+
+      <div class="flex items-center space-x-2 text-xs bg-indigo-950/60 border border-indigo-500/30 px-3 py-1.5 rounded-full">
+        <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        <span id="status-text" class="text-indigo-100 font-medium">Menghubungkan...</span>
       </div>
     </div>
   </header>
 
-  <!-- Navigation Tabs -->
-  <div class="bg-white border-b border-gray-200 sticky top-16 z-20 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <nav class="flex space-x-6 sm:space-x-8 overflow-x-auto" aria-label="Tabs">
-        <button type="button" onclick="switchTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn border-b-2 border-[#2e236c] py-4 px-1 text-sm font-semibold text-[#2e236c] flex items-center space-x-2 whitespace-nowrap cursor-pointer">
-          <i class="fa-solid fa-chart-pie"></i>
-          <span>Dashboard & Analisis</span>
-        </button>
-        <button type="button" onclick="switchTab('tab-pelanggan')" id="btn-tab-pelanggan" class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center space-x-2 whitespace-nowrap cursor-pointer">
-          <i class="fa-solid fa-users"></i>
-          <span>Kelola Pelanggan</span>
-        </button>
-        <button type="button" onclick="switchTab('tab-pesanan')" id="btn-tab-pesanan" class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center space-x-2 whitespace-nowrap cursor-pointer">
-          <i class="fa-solid fa-receipt"></i>
-          <span>Job Orders (Pesanan)</span>
-        </button>
-      </nav>
+  <!-- Tabs -->
+  <nav class="bg-white border-b border-slate-200 sticky top-16 z-20 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-6 overflow-x-auto">
+      <button type="button" data-tab="dashboard" class="tab-btn border-b-2 border-[#2e236c] text-[#2e236c] font-semibold py-4 text-sm flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Dashboard</span>
+      </button>
+      <button type="button" data-tab="customers" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium py-4 text-sm flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <i class="fa-solid fa-users"></i>
+        <span>Pelanggan</span>
+      </button>
+      <button type="button" data-tab="orders" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium py-4 text-sm flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <i class="fa-solid fa-receipt"></i>
+        <span>Job Orders</span>
+      </button>
     </div>
-  </div>
+  </nav>
 
-  <!-- Main Content Container -->
+  <!-- Main -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
 
-    <!-- ==================== TAB 1: DASHBOARD ==================== -->
-    <section id="tab-dashboard" class="tab-content block space-y-6">
-      
-      <!-- Ringkasan Kartu Metrik Keuangan -->
+    <!-- Dashboard -->
+    <section id="sec-dashboard" class="sec-panel space-y-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
           <div class="w-12 h-12 rounded-xl bg-indigo-50 text-[#2e236c] flex items-center justify-center text-xl">
             <i class="fa-solid fa-wallet"></i>
           </div>
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Pendapatan</p>
-            <h4 id="stat-total-revenue" class="text-xl font-bold text-slate-800">Rp 0</h4>
+            <p class="text-xs font-medium text-slate-500 uppercase">Total Pendapatan</p>
+            <h2 id="kpi-rev" class="text-xl font-bold text-slate-800">Rp 0</h2>
           </div>
         </div>
 
@@ -85,8 +76,8 @@
             <i class="fa-solid fa-boxes-stacked"></i>
           </div>
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Pesanan</p>
-            <h4 id="stat-total-orders" class="text-xl font-bold text-slate-800">0</h4>
+            <p class="text-xs font-medium text-slate-500 uppercase">Total Pesanan</p>
+            <h2 id="kpi-cnt" class="text-xl font-bold text-slate-800">0</h2>
           </div>
         </div>
 
@@ -95,10 +86,391 @@
             <i class="fa-solid fa-chart-line"></i>
           </div>
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Kelayakan (BCR)</p>
-            <h4 class="text-xl font-bold text-emerald-600">24.25x</h4>
+            <p class="text-xs font-medium text-slate-500 uppercase">Kelayakan (BCR)</p>
+            <h2 class="text-xl font-bold text-emerald-600">24.25x</h2>
           </div>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex
+          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase">Payback Period</p>
+            <h2 class="text-xl font-bold text-slate-800">~1.2 Bulan</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Tren Pendapatan Bulanan</h3>
+            <p class="text-xs text-slate-500">Akumulasi nilai order berdasarkan bulan</p>
+          </div>
+          <button type="button" id="btn-reload-dash" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium cursor-pointer">
+            <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
+          </button>
+        </div>
+        <div class="relative h-72 w-full pt-4">
+          <canvas id="chart-canvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Customers -->
+    <section id="sec-customers" class="sec-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-4">Tambah Pelanggan</h3>
+          <form id="f-customer" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Kode Pelanggan (Otomatis)</label>
+              <input type="text" id="c-code" readonly class="w-full text-sm font-semibold bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-[#2e236c] cursor-not-allowed" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Pelanggan *</label>
+              <input type="text" id="c-name" required placeholder="Nama lengkap" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">No. HP / WA</label>
+              <input type="text" id="c-phone" placeholder="08xxxxxxxxxx" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Alamat</label>
+              <textarea id="c-address" rows="3" placeholder="Alamat pengiriman" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none"></textarea>
+            </div>
+            <button type="submit" id="btn-c-submit" class="w-full bg-[#2e236c] hover:bg-[#231b53] text-white font-semibold py-2.5 px-4 rounded-xl shadow text-sm cursor-pointer">
+              Simpan Pelanggan
+            </button>
+          </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <h3 class="text-base font-bold text-slate-900">Daftar Pelanggan</h3>
+            <button type="button" id="btn-c-refresh" class="text-xs text-[#2e236c] hover:underline font-semibold cursor-pointer">Refresh</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="py-3 px-3 font-semibold">Kode</th>
+                  <th class="py-3 px-3 font-semibold">Nama</th>
+                  <th class="py-3 px-3 font-semibold">No. HP</th>
+                  <th class="py-3 px-3 font-semibold">Alamat</th>
+                </tr>
+              </thead>
+              <tbody id="tb-customers" class="divide-y divide-slate-100">
+                <tr><td colspan="4" class="py-6 text-center text-slate-400">Memuat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Orders -->
+    <section id="sec-orders" class="sec-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-4">Input Job Order</h3>
+          <form id="f-order" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Pelanggan *</label>
+              <select id="o-cust" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
+                <option value="">-- Pilih Pelanggan --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Produk / Motif Ukir *</label>
+              <input type="text" id="o-prod" required placeholder="Contoh: Kaligrafi Kayu Jati" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Qty</label>
+                <input type="number" id="o-qty" value="1" min="1" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+                <select id="o-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
+                  <option value="Dalam Antrian">Dalam Antrian</option>
+                  <option value="Dalam Proses">Dalam Proses</option>
+                  <option value="Selesai">Selesai</option>
+                  <option value="Lunas">Lunas</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Harga Jual (Rp) *</label>
+                <input type="number" id="o-price" required min="0" placeholder="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">DP / Dibayar (Rp)</label>
+                <input type="number" id="o-paid" value="0" min="0" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan</label>
+              <textarea id="o-notes" rows="2" placeholder="Spesifikasi kayu / finishing" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none"></textarea>
+            </div>
+            <button type="submit" id="btn-o-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow text-sm cursor-pointer">
+              Simpan Pesanan
+            </button>
+          </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <h3 class="text-base font-bold text-slate-900">Daftar Job Orders</h3>
+            <button type="button" id="btn-o-refresh" class="text-xs text-[#2e236c] hover:underline font-semibold cursor-pointer">Refresh</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="py-3 px-3 font-semibold">No. Order</th>
+                  <th class="py-3 px-3 font-semibold">Pelanggan</th>
+                  <th class="py-3 px-3 font-semibold">Produk</th>
+                  <th class="py-3 px-3 font-semibold">Harga Jual</th>
+                  <th class="py-3 px-3 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tb-orders" class="divide-y divide-slate-100">
+                <tr><td colspan="5" class="py-6 text-center text-slate-400">Memuat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p>&copy; 2026 KriyaCost — Nata Rasa, Ngukir Cita</p>
+  </footer>
+
+  <script>
+    const SB_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z3hiYm9yZmdlYWdwb3pycnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NTIxNDksImV4cCI6MjEwNjQyODE0OX0.EiDeav_hVM0ihAiaENDgrT7Tk61PgPancatf_YjtbIg';
+    const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+
+    let chartObj = null;
+    const fmt = n => 'Rp ' + (Number(n) || 0).toLocaleString('id-ID');
+
+    function setConn(ok, msg) {
+      const dot = document.getElementById('status-dot');
+      const txt = document.getElementById('status-text');
+      dot.className = 'w-2.5 h-2.5 rounded-full ' + (ok ? 'bg-emerald-400' : 'bg-amber-400');
+      txt.textContent = msg;
+    }
+
+    function goTab(name) {
+      document.querySelectorAll('.sec-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById('sec-' + name)?.classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        const isActive = b.dataset.tab === name;
+        b.classList.toggle('border-[#2e236c]', isActive);
+        b.classList.toggle('text-[#2e236c]', isActive);
+        b.classList.toggle('font-semibold', isActive);
+        b.classList.toggle('border-transparent', !isActive);
+        b.classList.toggle('text-slate-500', !isActive);
+        b.classList.toggle('font-medium', !isActive);
+      });
+
+      if (name === 'dashboard') loadDashboard();
+      if (name === 'customers') { nextCustCode(); loadCustomers(); }
+      if (name === 'orders') { fillCustomerSelect(); loadOrders(); }
+    }
+
+    async function nextCustCode() {
+      const el = document.getElementById('c-code');
+      if (!el) return;
+      if (!sb) { el.value = 'CUST-001'; return; }
+      const { data } = await sb.from('customers').select('customer_code');
+      const maxN = (data || []).reduce((m, r) => {
+        const hit = String(r.customer_code || '').match(/\d+/);
+        const val = hit ? parseInt(hit[0], 10) : 0;
+        return val > m ? val : m;
+      }, 0);
+      el.value = 'CUST-' + String(maxN + 1).padStart(3, '0');
+    }
+
+    async function loadCustomers() {
+      const tb = document.getElementById('tb-customers');
+      if (!sb) return;
+      const { data, error } = await sb.from('customers').select('*').order('id', { ascending: false });
+      if (error) {
+        tb.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-rose-500">${error.message}</td></tr>`;
+        return;
+      }
+      if (!data || !data.length) {
+        tb.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada pelanggan.</td></tr>';
+        return;
+      }
+      tb.innerHTML = data.map(c => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-3 font-semibold text-[#2e236c]">${c.customer_code || '-'}</td>
+          <td class="py-3 px-3 font-medium text-slate-800">${c.name}</td>
+          <td class="py-3 px-3 text-slate-600">${c.phone || '-'}</td>
+          <td class="py-3 px-3 text-slate-500">${c.address || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function onSaveCustomer(e) {
+      e.preventDefault();
+      if (!sb) return;
+      const btn = document.getElementById('btn-c-submit');
+      btn.disabled = true;
+      const payload = {
+        customer_code: document.getElementById('c-code').value,
+        name: document.getElementById('c-name').value.trim(),
+        phone: document.getElementById('c-phone').value.trim(),
+        address: document.getElementById('c-address').value.trim()
+      };
+      const { error } = await sb.from('customers').insert([payload]);
+      btn.disabled = false;
+      if (error) { alert('Gagal: ' + error.message); return; }
+      document.getElementById('f-customer').reset();
+      await nextCustCode();
+      await loadCustomers();
+      alert(`Pelanggan ${payload.name} (${payload.customer_code}) tersimpan!`);
+    }
+
+    async function fillCustomerSelect() {
+      const sel = document.getElementById('o-cust');
+      if (!sel || !sb) return;
+      const { data } = await sb.from('customers').select('customer_code, name').order('id', { ascending: true });
+      sel.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
+      (data || []).forEach(c => {
+        const op = document.createElement('option');
+        op.value = c.customer_code ? `${c.customer_code} - ${c.name}` : c.name;
+        op.textContent = op.value;
+        sel.appendChild(op);
+      });
+    }
+
+    async function loadOrders() {
+      const tb = document.getElementById('tb-orders');
+      if (!sb) return;
+      const { data, error } = await sb.from('orders').select('*').order('id', { ascending: false });
+      if (error) {
+        tb.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-rose-500">${error.message}</td></tr>`;
+        return;
+      }
+      if (!data || !data.length) {
+        tb.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Belum ada pesanan.</td></tr>';
+        return;
+      }
+      tb.innerHTML = data.map(o => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-3 font-semibold text-slate-800">${o.order_number || ('ORD-' + o.id)}</td>
+          <td class="py-3 px-3 text-slate-700">${o.customer_id || '-'}</td>
+          <td class="py-3 px-3 text-slate-900">${o.product_name} (${o.quantity || 1})</td>
+          <td class="py-3 px-3 font-semibold text-slate-800">${fmt(o.selling_price)}</td>
+          <td class="py-3 px-3"><span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-[#2e236c]">${o.status || 'Dalam Antrian'}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    async function onSaveOrder(e) {
+      e.preventDefault();
+      if (!sb) return;
+      const btn = document.getElementById('btn-o-submit');
+      btn.disabled = true;
+      const payload = {
+        order_number: 'ORD-' + Date.now().toString().slice(-5),
+        customer_id: document.getElementById('o-cust').value,
+        product_name: document.getElementById('o-prod').value.trim(),
+        quantity: Number(document.getElementById('o-qty').value) || 1,
+        status: document.getElementById('o-status').value,
+        selling_price: Number(document.getElementById('o-price').value) || 0,
+        total_paid: Number(document.getElementById('o-paid').value) || 0,
+        notes: document.getElementById('o-notes').value.trim()
+      };
+      const { error } = await sb.from('orders').insert([payload]);
+      btn.disabled = false;
+      if (error) { alert('Gagal: ' + error.message); return; }
+      document.getElementById('f-order').reset();
+      await loadOrders();
+      await loadDashboard();
+      alert(`Pesanan ${payload.order_number} tersimpan!`);
+    }
+
+    async function loadDashboard() {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const series = new Array(12).fill(0);
+      let rev = 0;
+      let cnt = 0;
+
+      if (sb) {
+        const { data } = await sb.from('orders').select('selling_price, created_at');
+        if (data) {
+          cnt = data.length;
+          data.forEach(r => {
+            const p = Number(r.selling_price) || 0;
+            rev += p;
+            const m = r.created_at ? new Date(r.created_at).getMonth() : -1;
+            if (m >= 0 && m < 12) series[m] += p;
+          });
+        }
+      }
+
+      document.getElementById('kpi-rev').textContent = fmt(rev);
+      document.getElementById('kpi-cnt').textContent = String(cnt);
+
+      const ctx = document.getElementById('chart-canvas')?.getContext('2d');
+      if (!ctx || typeof Chart === 'undefined') return;
+      if (chartObj) chartObj.destroy();
+
+      chartObj = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'Pendapatan (Rp)',
+            data: series,
+            borderColor: '#2e236c',
+            backgroundColor: 'rgba(46, 35, 108, 0.12)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointBackgroundColor: '#2e236c',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: v => v >= 1000000 ? 'Rp ' + (v / 1000000).toFixed(1) + ' Jt' : fmt(v) }
+            }
+          }
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => goTab(b.dataset.tab)));
+      document.getElementById('f-customer')?.addEventListener('submit', onSaveCustomer);
+      document.getElementById('f-order')?.addEventListener('submit', onSaveOrder);
+      document.getElementById('btn-reload-dash')?.addEventListener('click', loadDashboard);
+      document.getElementById('btn-c-refresh')?.addEventListener('click', loadCustomers);
+      document.getElementById('btn-o-refresh')?.addEventListener('click', loadOrders);
+
+      if (!sb) { setConn(false, 'SDK Tidak Dimuat'); await loadDashboard(); return; }
+      const { error } = await sb.from('customers').select('id').limit(1);
+      setConn(!error, error ? 'Cek Tabel/SQL' : 'Supabase Connected');
+      await nextCustCode();
+      await loadDashboard();
+    });
+  </script>
+</body>
+</html>

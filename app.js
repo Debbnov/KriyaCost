@@ -1,9 +1,8 @@
 // ==========================================================
 // 1. KONFIGURASI SUPABASE
 // ==========================================================
-const SUPABASE_URL = 'https://uupwezyzfwfaupbreykx.supabase.co';
-// Ganti nilai kunci di bawah dengan anon public key kamu yang diawali "eyJ..."
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1cHdlenl6ZndmYXVwYnJleWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MDQ0MjIsImV4cCI6MjEwNzM4MDQyMn0.4OMiNnfAy6QLgpeHo7NMtCpL6GhKPED2iN0Y49w1t8o';
+const SUPABASE_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z3hiYm9yZmdlYWdwb3pycnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NTIxNDksImV4cCI6MjEwNjQyODE0OX0.EiDeav_hVM0ihAiaENDgrT7Tk61PgPancatf_YjtbIg';
 
 const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient)
   ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)

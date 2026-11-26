@@ -7,16 +7,29 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS untuk Export Excel (.xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     @media print {
       body * { visibility: hidden !important; }
-      #print-modal, #print-modal * { visibility: visible !important; }
-      #print-modal {
+      body.printing-doc #print-modal,
+      body.printing-doc #print-modal * { visibility: visible !important; }
+      body.printing-doc #print-modal {
         position: fixed !important;
         inset: 0 !important;
         background: #fff !important;
-        padding: 0 !important;
+        padding: 16px !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+      body.printing-report #report-printable,
+      body.printing-report #report-printable * { visibility: visible !important; }
+      body.printing-report #report-printable {
+        position: fixed !important;
+        inset: 0 !important;
+        background: #fff !important;
+        padding: 20px !important;
         margin: 0 !important;
         box-shadow: none !important;
       }
@@ -67,6 +80,10 @@
         <i class="fa-solid fa-receipt"></i>
         <span>Job Orders</span>
       </button>
+      <button type="button" data-tab="materials" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium py-4 text-sm flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <i class="fa-solid fa-boxes-packing"></i>
+        <span>Stok & Restock Bahan</span>
+      </button>
       <button type="button" data-tab="reports" class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium py-4 text-sm flex items-center space-x-2 whitespace-nowrap cursor-pointer">
         <i class="fa-solid fa-file-invoice-dollar"></i>
         <span>Laporan Keuangan</span>
@@ -75,10 +92,21 @@
   </nav>
 
   <!-- Main -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full no-print">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
 
     <!-- TAB 1: DASHBOARD -->
     <section id="sec-dashboard" class="sec-panel space-y-6">
+      <!-- Banner Peringatan Restock Bahan jika ada stok menipis -->
+      <div id="dash-restock-alert" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-3">
+        <div class="flex items-center space-x-3 text-xs sm:text-sm text-amber-900">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg"></i>
+          <span id="dash-restock-text">Ada bahan ukir yang perlu segera di-restock.</span>
+        </div>
+        <button type="button" onclick="goTab('materials')" class="text-xs bg-amber-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-amber-700 whitespace-nowrap cursor-pointer">
+          Cek Stok
+        </button>
+      </div>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
           <div class="w-12 h-12 rounded-xl bg-indigo-50 text-[#2e236c] flex items-center justify-center text-xl">
@@ -191,10 +219,10 @@
 
     <!-- TAB 3: JOB ORDERS -->
     <section id="sec-orders" class="sec-panel hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-4">
           <h3 class="text-base font-bold text-slate-900 mb-4">Input Job Order</h3>
-          <form id="f-order" class="space-y-4">
+          <form id="f-order" class="space-y-3.5">
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Pelanggan *</label>
               <select id="o-cust" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
@@ -211,13 +239,8 @@
                 <input type="number" id="o-qty" value="1" min="1" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
               </div>
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
-                <select id="o-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
-                  <option value="Dalam Antrian">Dalam Antrian</option>
-                  <option value="Dalam Proses">Dalam Proses</option>
-                  <option value="Selesai">Selesai</option>
-                  <option value="Lunas">Lunas</option>
-                </select>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Target Selesai (Deadline) *</label>
+                <input type="date" id="o-deadline" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -231,8 +254,18 @@
               </div>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan</label>
-              <textarea id="o-notes" rows="2" placeholder="Spesifikasi kayu / finishing" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none"></textarea>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Status Awal</label>
+              <select id="o-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
+                <option value="Dalam Antrian">Dalam Antrian</option>
+                <option value="Dalam Proses">Dalam Proses</option>
+                <option value="Finishing">Finishing</option>
+                <option value="Selesai">Selesai</option>
+                <option value="Lunas">Lunas</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan / Request Pelanggan</label>
+              <textarea id="o-notes" rows="2" placeholder="Jenis kayu, ukuran khusus, warna finishing..." class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none"></textarea>
             </div>
             <button type="submit" id="btn-o-submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow text-sm cursor-pointer">
               Simpan Pesanan
@@ -240,21 +273,24 @@
           </form>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-8">
           <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-            <h3 class="text-base font-bold text-slate-900">Daftar Job Orders & Cetak Dokumen</h3>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Daftar Job Orders</h3>
+              <p class="text-[11px] text-slate-500">Status bisa langsung diubah lewat pilihan pada masing-masing baris</p>
+            </div>
             <button type="button" id="btn-o-refresh" class="text-xs text-[#2e236c] hover:underline font-semibold cursor-pointer">Refresh</button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
-                  <th class="py-3 px-3 font-semibold">No. Order</th>
-                  <th class="py-3 px-3 font-semibold">Pelanggan</th>
-                  <th class="py-3 px-3 font-semibold">Produk</th>
-                  <th class="py-3 px-3 font-semibold">Harga Jual</th>
-                  <th class="py-3 px-3 font-semibold">Status</th>
-                  <th class="py-3 px-3 font-semibold">Cetak</th>
+                  <th class="py-3 px-2.5 font-semibold">Order & Pelanggan</th>
+                  <th class="py-3 px-2.5 font-semibold">Produk & Catatan</th>
+                  <th class="py-3 px-2.5 font-semibold">Target Selesai</th>
+                  <th class="py-3 px-2.5 font-semibold">Harga</th>
+                  <th class="py-3 px-2.5 font-semibold">Ubah Status</th>
+                  <th class="py-3 px-2.5 font-semibold">Cetak</th>
                 </tr>
               </thead>
               <tbody id="tb-orders" class="divide-y divide-slate-100">
@@ -266,468 +302,82 @@
       </div>
     </section>
 
-    <!-- TAB 4: LAPORAN KEUANGAN SEDERHANA -->
-    <section id="sec-reports" class="sec-panel hidden space-y-6">
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900">Ringkasan Keuangan Usaha (Bahasa Sederhana)</h3>
-            <p class="text-xs text-slate-500">Gambaran cepat penjualan, uang yang sudah diterima, dan sisa tagihan pelanggan</p>
-          </div>
-          <button type="button" id="btn-rep-refresh" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium cursor-pointer self-start">
-            <i class="fa-solid fa-rotate-right mr-1"></i>Perbarui Laporan
-          </button>
+    <!-- TAB 4: STOK & RESTOCK BAHAN UKIR -->
+    <section id="sec-materials" class="sec-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-4">Tambah Bahan Pengukir</h3>
+          <form id="f-material" class="space-y-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Bahan *</label>
+              <input type="text" id="m-name" required placeholder="Contoh: Papan Kayu Jati 3cm / Lem Fox" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori</label>
+                <select id="m-cat" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none">
+                  <option value="Kayu & Papan">Kayu & Papan</option>
+                  <option value="Lem & Perekat">Lem & Perekat</option>
+                  <option value="Finishing & Cat">Finishing & Cat</option>
+                  <option value="Amplas & Alat Ukir">Amplas & Alat Ukir</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Satuan</label>
+                <input type="text" id="m-unit" value="lembar / kaleng" placeholder="lembar / kg / kaleng" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Stok Saat Ini *</label>
+                <input type="number" id="m-stock" required min="0" value="10" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Batas Minimal Restock *</label>
+                <input type="number" id="m-min" required min="0" value="3" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan Supplier / Jadwal Beli</label>
+              <input type="text" id="m-note" placeholder="Contoh: Beli di Toko Kayu Jepara tiap awal bulan" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2e236c] focus:outline-none" />
+            </div>
+            <button type="submit" id="btn-m-submit" class="w-full bg-[#2e236c] hover:bg-[#231b53] text-white font-semibold py-2.5 px-4 rounded-xl shadow text-sm cursor-pointer">
+              Simpan Data Bahan
+            </button>
+          </form>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-100">
-            <p class="text-xs font-semibold text-[#2e236c]">Total Nilai Pesanan (Omzet)</p>
-            <p id="rep-omzet" class="text-2xl font-bold text-slate-900 mt-1">Rp 0</p>
-            <p class="text-[11px] text-slate-600 mt-1">Total harga seluruh pesanan yang tercatat.</p>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Monitoring Stok & Jadwal Restock Bahan</h3>
+              <p class="text-[11px] text-slate-500">Klik +1 / -1 untuk update pemakaian bahan harian</p>
+            </div>
+            <button type="button" id="btn-m-refresh" class="text-xs text-[#2e236c] hover:underline font-semibold cursor-pointer">Refresh</button>
           </div>
-          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-100">
-            <p class="text-xs font-semibold text-emerald-700">Uang Sudah Diterima (DP / Lunas)</p>
-            <p id="rep-paid" class="text-2xl font-bold text-emerald-700 mt-1">Rp 0</p>
-            <p class="text-[11px] text-slate-600 mt-1">Dana yang sudah masuk dari pelanggan.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="py-3 px-3 font-semibold">Bahan & Kategori</th>
+                  <th class="py-3 px-3 font-semibold">Sisa Stok</th>
+                  <th class="py-3 px-3 font-semibold">Min. Restock</th>
+                  <th class="py-3 px-3 font-semibold">Status Restock</th>
+                  <th class="py-3 px-3 font-semibold">Atur Stok</th>
+                </tr>
+              </thead>
+              <tbody id="tb-materials" class="divide-y divide-slate-100">
+                <tr><td colspan="5" class="py-6 text-center text-slate-400">Memuat stok bahan...</td></tr>
+              </tbody>
+            </table>
           </div>
-          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-100">
-            <p class="text-xs font-semibold text-amber-700">Sisa Tagihan Belum Dibayar</p>
-            <p id="rep-receivable" class="text-2xl font-bold text-amber-700 mt-1">Rp 0</p>
-            <p class="text-[11px] text-slate-600 mt-1">Kekurangan pembayaran yang masih ditagihkan.</p>
-          </div>
-        </div>
-
-        <div id="rep-narrative" class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700 leading-relaxed">
-          Memuat ringkasan kondisi keuangan...
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
-                <th class="py-3 px-3 font-semibold">No. Order</th>
-                <th class="py-3 px-3 font-semibold">Pelanggan</th>
-                <th class="py-3 px-3 font-semibold">Harga Jual</th>
-                <th class="py-3 px-3 font-semibold">Sudah Dibayar</th>
-                <th class="py-3 px-3 font-semibold">Sisa Tagihan</th>
-                <th class="py-3 px-3 font-semibold">Keterangan</th>
-              </tr>
-            </thead>
-            <tbody id="tb-reports" class="divide-y divide-slate-100">
-              <tr><td colspan="6" class="py-6 text-center text-slate-400">Memuat laporan...</td></tr>
-            </tbody>
-          </table>
         </div>
       </div>
     </section>
 
-  </main>
-
-  <!-- Modal Cetak Invoice & Nota -->
-  <div id="print-backdrop" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div id="print-modal" class="bg-white w-full max-w-xl rounded-2xl shadow-xl border border-slate-200 p-6 space-y-5">
-      <div class="flex items-start justify-between border-b border-slate-200 pb-4">
-        <div>
-          <span id="doc-badge" class="inline-block text-[11px] font-bold uppercase px-2.5 py-0.5 rounded bg-indigo-100 text-[#2e236c] mb-1">INVOICE</span>
-          <h2 class="text-xl font-bold text-[#2e236c]">KriyaCost</h2>
-          <p class="text-xs text-slate-500 italic">Nata Rasa, Ngukir Cita</p>
-        </div>
-        <div class="text-right text-xs text-slate-600">
-          <p class="font-semibold text-slate-800" id="doc-number">ORD-00000</p>
-          <p id="doc-date">-</p>
-          <p id="doc-status" class="font-semibold text-[#2e236c] mt-0.5">-</p>
-        </div>
-      </div>
-
-      <div class="text-xs space-y-1 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-        <p class="text-slate-400 font-semibold uppercase text-[10px]">Kepada Pelanggan</p>
-        <p id="doc-customer" class="text-sm font-bold text-slate-800">-</p>
-      </div>
-
-      <div class="border border-slate-200 rounded-xl overflow-hidden text-xs">
-        <table class="w-full text-left">
-          <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
-            <tr>
-              <th class="py-2.5 px-3">Produk / Pesanan</th>
-              <th class="py-2.5 px-3 text-center">Qty</th>
-              <th class="py-2.5 px-3 text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="py-3 px-3">
-                <p id="doc-product" class="font-semibold text-slate-800">-</p>
-                <p id="doc-notes" class="text-slate-500 text-[11px] mt-0.5"></p>
-              </td>
-              <td id="doc-qty" class="py-3 px-3 text-center">1</td>
-              <td id="doc-price" class="py-3 px-3 text-right font-semibold">Rp 0</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="space-y-1.5 text-xs border-t border-slate-200 pt-3">
-        <div class="flex justify-between text-slate-600">
-          <span>Total Tagihan</span>
-          <span id="doc-sum-price" class="font-semibold text-slate-800">Rp 0</span>
-        </div>
-        <div class="flex justify-between text-emerald-700">
-          <span>Sudah Dibayar / DP</span>
-          <span id="doc-sum-paid" class="font-semibold">Rp 0</span>
-        </div>
-        <div class="flex justify-between text-sm font-bold text-[#2e236c] border-t border-slate-100 pt-2">
-          <span>Sisa Pembayaran</span>
-          <span id="doc-sum-due">Rp 0</span>
-        </div>
-      </div>
-
-      <p class="text-[11px] text-center text-slate-400 pt-2">
-        Terima kasih telah mempercayakan kerajinan kayu Anda kepada KriyaCost.
-      </p>
-
-      <div class="flex justify-end space-x-2 pt-2 no-print">
-        <button type="button" id="btn-close-doc" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">
-          Tutup
-        </button>
-        <button type="button" id="btn-do-print" class="px-4 py-2 rounded-xl bg-[#2e236c] text-white text-xs font-semibold hover:bg-[#231b53] cursor-pointer">
-          <i class="fa-solid fa-print mr-1"></i>Cetak Sekarang
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print">
-    <p>&copy; 2026 KriyaCost — Nata Rasa, Ngukir Cita</p>
-  </footer>
-
-  <script>
-    const SB_URL = 'https://cwgxbborfgeagpozrrvk.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z3hiYm9yZmdlYWdwb3pycnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NTIxNDksImV4cCI6MjEwNjQyODE0OX0.EiDeav_hVM0ihAiaENDgrT7Tk61PgPancatf_YjtbIg';
-    const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
-
-    let chartObj = null;
-    let cachedOrders = [];
-    const fmt = n => 'Rp ' + (Number(n) || 0).toLocaleString('id-ID');
-
-    function setConn(ok, msg) {
-      const dot = document.getElementById('status-dot');
-      const txt = document.getElementById('status-text');
-      dot.className = 'w-2.5 h-2.5 rounded-full ' + (ok ? 'bg-emerald-400' : 'bg-amber-400');
-      txt.textContent = msg;
-    }
-
-    function goTab(name) {
-      document.querySelectorAll('.sec-panel').forEach(p => p.classList.add('hidden'));
-      document.getElementById('sec-' + name)?.classList.remove('hidden');
-
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        const isActive = b.dataset.tab === name;
-        b.classList.toggle('border-[#2e236c]', isActive);
-        b.classList.toggle('text-[#2e236c]', isActive);
-        b.classList.toggle('font-semibold', isActive);
-        b.classList.toggle('border-transparent', !isActive);
-        b.classList.toggle('text-slate-500', !isActive);
-        b.classList.toggle('font-medium', !isActive);
-      });
-
-      if (name === 'dashboard') loadDashboard();
-      if (name === 'customers') { nextCustCode(); loadCustomers(); }
-      if (name === 'orders') { fillCustomerSelect(); loadOrders(); }
-      if (name === 'reports') loadReports();
-    }
-
-    async function nextCustCode() {
-      const el = document.getElementById('c-code');
-      if (!el) return;
-      if (!sb) { el.value = 'CUST-001'; return; }
-      const { data } = await sb.from('customers').select('customer_code');
-      const maxN = (data || []).reduce((m, r) => {
-        const hit = String(r.customer_code || '').match(/\d+/);
-        const val = hit ? parseInt(hit[0], 10) : 0;
-        return val > m ? val : m;
-      }, 0);
-      el.value = 'CUST-' + String(maxN + 1).padStart(3, '0');
-    }
-
-    async function loadCustomers() {
-      const tb = document.getElementById('tb-customers');
-      if (!sb) return;
-      const { data, error } = await sb.from('customers').select('*').order('id', { ascending: false });
-      if (error) {
-        tb.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-rose-500">${error.message}</td></tr>`;
-        return;
-      }
-      if (!data || !data.length) {
-        tb.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada pelanggan.</td></tr>';
-        return;
-      }
-      tb.innerHTML = data.map(c => `
-        <tr class="hover:bg-slate-50">
-          <td class="py-3 px-3 font-semibold text-[#2e236c]">${c.customer_code || '-'}</td>
-          <td class="py-3 px-3 font-medium text-slate-800">${c.name}</td>
-          <td class="py-3 px-3 text-slate-600">${c.phone || '-'}</td>
-          <td class="py-3 px-3 text-slate-500">${c.address || '-'}</td>
-        </tr>
-      `).join('');
-    }
-
-    async function onSaveCustomer(e) {
-      e.preventDefault();
-      if (!sb) return;
-      const btn = document.getElementById('btn-c-submit');
-      btn.disabled = true;
-      const payload = {
-        customer_code: document.getElementById('c-code').value,
-        name: document.getElementById('c-name').value.trim(),
-        phone: document.getElementById('c-phone').value.trim(),
-        address: document.getElementById('c-address').value.trim()
-      };
-      const { error } = await sb.from('customers').insert([payload]);
-      btn.disabled = false;
-      if (error) { alert('Gagal: ' + error.message); return; }
-      document.getElementById('f-customer').reset();
-      await nextCustCode();
-      await loadCustomers();
-      alert(`Pelanggan ${payload.name} (${payload.customer_code}) tersimpan!`);
-    }
-
-    async function fillCustomerSelect() {
-      const sel = document.getElementById('o-cust');
-      if (!sel || !sb) return;
-      const { data } = await sb.from('customers').select('customer_code, name').order('id', { ascending: true });
-      sel.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
-      (data || []).forEach(c => {
-        const op = document.createElement('option');
-        op.value = c.customer_code ? `${c.customer_code} - ${c.name}` : c.name;
-        op.textContent = op.value;
-        sel.appendChild(op);
-      });
-    }
-
-    async function fetchAllOrders() {
-      if (!sb) return [];
-      const { data, error } = await sb.from('orders').select('*').order('id', { ascending: false });
-      if (error) throw error;
-      cachedOrders = data || [];
-      return cachedOrders;
-    }
-
-    async function loadOrders() {
-      const tb = document.getElementById('tb-orders');
-      if (!sb) return;
-      try {
-        const data = await fetchAllOrders();
-        if (!data.length) {
-          tb.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada pesanan.</td></tr>';
-          return;
-        }
-        tb.innerHTML = data.map((o, idx) => `
-          <tr class="hover:bg-slate-50">
-            <td class="py-3 px-3 font-semibold text-slate-800">${o.order_number || ('ORD-' + o.id)}</td>
-            <td class="py-3 px-3 text-slate-700">${o.customer_id || '-'}</td>
-            <td class="py-3 px-3 text-slate-900">${o.product_name} (${o.quantity || 1})</td>
-            <td class="py-3 px-3 font-semibold text-slate-800">${fmt(o.selling_price)}</td>
-            <td class="py-3 px-3"><span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-[#2e236c]">${o.status || 'Dalam Antrian'}</span></td>
-            <td class="py-3 px-3 space-x-1 whitespace-nowrap">
-              <button type="button" onclick="openPrintDoc(${idx}, 'INVOICE')" class="px-2 py-1 rounded bg-indigo-50 text-[#2e236c] hover:bg-indigo-100 font-semibold text-[11px] cursor-pointer">Invoice</button>
-              <button type="button" onclick="openPrintDoc(${idx}, 'NOTA')" class="px-2 py-1 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-[11px] cursor-pointer">Nota</button>
-            </td>
-          </tr>
-        `).join('');
-      } catch (err) {
-        tb.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-rose-500">${err.message}</td></tr>`;
-      }
-    }
-
-    function openPrintDoc(index, type) {
-      const o = cachedOrders[index];
-      if (!o) return;
-      const price = Number(o.selling_price) || 0;
-      const paid = Number(o.total_paid) || 0;
-      const due = Math.max(0, price - paid);
-
-      document.getElementById('doc-badge').textContent = type === 'NOTA' ? 'NOTA PEMBAYARAN' : 'INVOICE TAGIHAN';
-      document.getElementById('doc-number').textContent = o.order_number || ('ORD-' + o.id);
-      document.getElementById('doc-date').textContent = o.created_at ? new Date(o.created_at).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID');
-      document.getElementById('doc-status').textContent = o.status || 'Dalam Antrian';
-      document.getElementById('doc-customer').textContent = o.customer_id || 'Pelanggan Umum';
-      document.getElementById('doc-product').textContent = o.product_name || '-';
-      document.getElementById('doc-notes').textContent = o.notes ? ('Catatan: ' + o.notes) : '';
-      document.getElementById('doc-qty').textContent = o.quantity || 1;
-      document.getElementById('doc-price').textContent = fmt(price);
-      document.getElementById('doc-sum-price').textContent = fmt(price);
-      document.getElementById('doc-sum-paid').textContent = fmt(paid);
-      document.getElementById('doc-sum-due').textContent = fmt(due);
-
-      const bd = document.getElementById('print-backdrop');
-      bd.classList.remove('hidden');
-      bd.classList.add('flex');
-    }
-
-    function closePrintDoc() {
-      const bd = document.getElementById('print-backdrop');
-      bd.classList.add('hidden');
-      bd.classList.remove('flex');
-    }
-
-    async function onSaveOrder(e) {
-      e.preventDefault();
-      if (!sb) return;
-      const btn = document.getElementById('btn-o-submit');
-      btn.disabled = true;
-
-      const basePayload = {
-        order_number: 'ORD-' + Date.now().toString().slice(-5),
-        customer_id: document.getElementById('o-cust').value,
-        product_name: document.getElementById('o-prod').value.trim(),
-        quantity: Number(document.getElementById('o-qty').value) || 1,
-        status: document.getElementById('o-status').value,
-        selling_price: Number(document.getElementById('o-price').value) || 0,
-        total_paid: Number(document.getElementById('o-paid').value) || 0,
-        notes: document.getElementById('o-notes').value.trim()
-      };
-
-      let { error } = await sb.from('orders').insert([basePayload]);
-
-      // Jika masih ada kolom opsional yang belum ada di tabel, coba simpan tanpa notes/total_paid
-      if (error && String(error.message || '').includes('column')) {
-        const fallbackPayload = {
-          order_number: basePayload.order_number,
-          customer_id: basePayload.customer_id,
-          product_name: basePayload.product_name,
-          quantity: basePayload.quantity,
-          status: basePayload.status,
-          selling_price: basePayload.selling_price
-        };
-        const retry = await sb.from('orders').insert([fallbackPayload]);
-        error = retry.error;
-      }
-
-      btn.disabled = false;
-      if (error) { alert('Gagal: ' + error.message); return; }
-
-      document.getElementById('f-order').reset();
-      await loadOrders();
-      await loadDashboard();
-      alert(`Pesanan ${basePayload.order_number} tersimpan!`);
-    }
-
-    async function loadReports() {
-      const tb = document.getElementById('tb-reports');
-      const nar = document.getElementById('rep-narrative');
-      try {
-        const data = await fetchAllOrders();
-        const omzet = data.reduce((s, r) => s + (Number(r.selling_price) || 0), 0);
-        const paid = data.reduce((s, r) => s + (Number(r.total_paid) || 0), 0);
-        const due = data.reduce((s, r) => s + Math.max(0, (Number(r.selling_price) || 0) - (Number(r.total_paid) || 0)), 0);
-
-        document.getElementById('rep-omzet').textContent = fmt(omzet);
-        document.getElementById('rep-paid').textContent = fmt(paid);
-        document.getElementById('rep-receivable').textContent = fmt(due);
-
-        nar.textContent = data.length === 0
-          ? 'Belum ada pesanan tercatat. Silakan input pesanan di tab Job Orders untuk melihat ringkasan keuangan.'
-          : `Dari ${data.length} pesanan yang tercatat, total penjualan mencapai ${fmt(omzet)}. Uang yang sudah masuk sebesar ${fmt(paid)} dan sisa tagihan yang belum dibayar sebesar ${fmt(due)}.`;
-
-        if (!data.length) {
-          tb.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada data laporan.</td></tr>';
-          return;
-        }
-
-        tb.innerHTML = data.map(o => {
-          const p = Number(o.selling_price) || 0;
-          const d = Number(o.total_paid) || 0;
-          const rem = Math.max(0, p - d);
-          const note = rem === 0 ? 'Lunas / Terbayar penuh' : 'Masih ada sisa tagihan';
-          return `
-            <tr class="hover:bg-slate-50">
-              <td class="py-3 px-3 font-semibold text-slate-800">${o.order_number || ('ORD-' + o.id)}</td>
-              <td class="py-3 px-3 text-slate-700">${o.customer_id || '-'}</td>
-              <td class="py-3 px-3 font-semibold">${fmt(p)}</td>
-              <td class="py-3 px-3 text-emerald-700 font-medium">${fmt(d)}</td>
-              <td class="py-3 px-3 text-amber-700 font-medium">${fmt(rem)}</td>
-              <td class="py-3 px-3 text-slate-600">${note}</td>
-            </tr>
-          `;
-        }).join('');
-      } catch (err) {
-        nar.textContent = 'Gagal memuat laporan: ' + err.message;
-      }
-    }
-
-    async function loadDashboard() {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-      const series = new Array(12).fill(0);
-      let rev = 0;
-      let cnt = 0;
-
-      if (sb) {
-        try {
-          const data = await fetchAllOrders();
-          cnt = data.length;
-          data.forEach(r => {
-            const p = Number(r.selling_price) || 0;
-            rev += p;
-            const m = r.created_at ? new Date(r.created_at).getMonth() : -1;
-            if (m >= 0 && m < 12) series[m] += p;
-          });
-        } catch {}
-      }
-
-      document.getElementById('kpi-rev').textContent = fmt(rev);
-      document.getElementById('kpi-cnt').textContent = String(cnt);
-
-      const ctx = document.getElementById('chart-canvas')?.getContext('2d');
-      if (!ctx || typeof Chart === 'undefined') return;
-      if (chartObj) chartObj.destroy();
-
-      chartObj = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: months,
-          datasets: [{
-            label: 'Pendapatan (Rp)',
-            data: series,
-            borderColor: '#2e236c',
-            backgroundColor: 'rgba(46, 35, 108, 0.12)',
-            fill: true,
-            tension: 0.35,
-            borderWidth: 2.5,
-            pointBackgroundColor: '#2e236c',
-            pointRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { callback: v => v >= 1000000 ? 'Rp ' + (v / 1000000).toFixed(1) + ' Jt' : fmt(v) }
-            }
-          }
-        }
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => goTab(b.dataset.tab)));
-      document.getElementById('f-customer')?.addEventListener('submit', onSaveCustomer);
-      document.getElementById('f-order')?.addEventListener('submit', onSaveOrder);
-      document.getElementById('btn-reload-dash')?.addEventListener('click', loadDashboard);
-      document.getElementById('btn-c-refresh')?.addEventListener('click', loadCustomers);
-      document.getElementById('btn-o-refresh')?.addEventListener('click', loadOrders);
-      document.getElementById('btn-rep-refresh')?.addEventListener('click', loadReports);
-      document.getElementById('btn-close-doc')?.addEventListener('click', closePrintDoc);
-      document.getElementById('btn-do-print')?.addEventListener('click', () => window.print());
-
-      if (!sb) { setConn(false, 'SDK Tidak Dimuat'); await loadDashboard(); return; }
-      const { error } = await sb.from('customers').select('id').limit(1);
-      setConn(!error, error ? 'Cek Tabel/SQL' : 'Supabase Connected');
-      await nextCustCode();
-      await loadDashboard();
-    });
-  </script>
-</body>
-</html>
+    <!-- TAB 5: LAPORAN KEUANGAN SEDERHANA + EXPORT EXCEL & PDF -->
+    <section id="sec-reports" class="sec-panel hidden space-y-6">
+      <div id="report-printable" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Laporan Keuangan
